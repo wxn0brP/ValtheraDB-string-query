@@ -1,4 +1,6 @@
-class ValtheraSQLParser {
+import { ValtheraParser, ValtheraQuery } from "./types";
+
+class ValtheraSQLParser implements ValtheraParser {
     parse(query: string) {
         query = query.trim();
         const tokens = query.split(/\s+/);
@@ -16,7 +18,7 @@ class ValtheraSQLParser {
         }
     }
 
-    private parseReturn(method: string, args: any[]) {
+    private parseReturn(method: string, args: any[]): ValtheraQuery {
         return { method, args };
     }
 

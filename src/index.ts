@@ -5,3 +5,5 @@ export {
     valtheraJsParser,
     valtheraSQLParser
 }
+
+export type { ValtheraParser, ValtheraQuery } from "./types";

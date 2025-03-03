@@ -1,7 +1,8 @@
 import JSON5 from "json5";
+import { ValtheraParser } from "./types";
 
-class ValtheraJsParser {
-    parseQuery(query: string) {
+class ValtheraJsParser implements ValtheraParser {
+    parse(query: string) {
         const match = query.match(/^(\w+)\((.*)\)$/);
         if (!match) throw new Error("Invalid query");
 
