@@ -12,6 +12,10 @@ const operators: Record<string, string> = {
 };
 
 export function parseWhere(where: string): QueryObject {
+    if (!where) return {};
+    const trimmed = where.trim();
+    if (trimmed === "" || trimmed === "1") return {};
+
     // Tokenize the input string, handling parentheses and quoted values
     const tokens = where
         .replace(/\s+(?=(?:[^'"]*['"][^'"]*['"])*[^'"]*$)/g, " ")
