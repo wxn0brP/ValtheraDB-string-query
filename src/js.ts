@@ -1,7 +1,7 @@
 import JSON5 from "json5";
 import { ValtheraParser } from "./types";
 
-class ValtheraJsParser implements ValtheraParser {
+class JsParser implements ValtheraParser {
     parse(query: string) {
         const match = query.match(/^(\w+)\((.*)\)$/);
         if (!match) throw new Error("Invalid query");
@@ -35,5 +35,4 @@ class ValtheraJsParser implements ValtheraParser {
     }
 }
 
-const valtheraJsParser = new ValtheraJsParser();
-export default valtheraJsParser;
+export default JsParser;

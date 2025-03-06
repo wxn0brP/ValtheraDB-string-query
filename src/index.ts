@@ -1,9 +1,13 @@
 import valtheraJsParser from "./js";
 import valtheraSQLParser from "./sql";
 
-export {
-    valtheraJsParser,
-    valtheraSQLParser
+const ValtheraDbParsers = {
+    js: valtheraJsParser,
+    sql: valtheraSQLParser
 }
 
-export type { ValtheraParser, ValtheraQuery } from "./types";
+const ValtheraDbRelations = {
+    
+}
+
+export { ValtheraDbParsers, ValtheraDbRelations };
