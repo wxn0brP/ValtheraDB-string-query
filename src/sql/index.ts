@@ -5,14 +5,15 @@ class SQLParser implements ValtheraParser {
     parse(query: string) {
         query = query.trim();
         const tokens = query.split(/\s+/);
+        const method = tokens[0].toUpperCase();
 
-        if (tokens[0].toUpperCase() === "SELECT") {
+        if (method === "SELECT") {
             return handleSelect(query);
-        } else if (tokens[0].toUpperCase() === "INSERT") {
+        } else if (method === "INSERT") {
             return handleInsert(query);
-        } else if (tokens[0].toUpperCase() === "UPDATE") {
+        } else if (method === "UPDATE") {
             return handleUpdate(query);
-        } else if (tokens[0].toUpperCase() === "DELETE") {
+        } else if (method === "DELETE") {
             return handleDelete(query);
         } else {
             throw new Error("Unknown query: " + tokens[0]);
