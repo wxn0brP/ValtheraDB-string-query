@@ -1,5 +1,5 @@
 import { ValtheraParser } from "../types";
-import { handleDelete, handleInsert, handleSelect, handleUpdate } from "./handle";
+import { handleCreate, handleDelete, handleDrop, handleExists, handleGet, handleInsert, handleSelect, handleUpdate } from "./handle";
 
 class SQLParser implements ValtheraParser {
     parse(query: string) {
@@ -15,6 +15,16 @@ class SQLParser implements ValtheraParser {
             return handleUpdate(query);
         } else if (method === "DELETE") {
             return handleDelete(query);
+        }
+        // collection
+        else if (method === "GET") {
+            return handleGet(query);
+        } else if (method === "CREATE") {
+            return handleCreate(query);
+        } else if (method === "DROP") {
+            return handleDrop(query);
+        } else if (method === "EXISTS") {
+            return handleExists(query);
         } else {
             throw new Error("Unknown query: " + tokens[0]);
         }

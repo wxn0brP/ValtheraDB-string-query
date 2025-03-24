@@ -65,3 +65,29 @@ export function handleDelete(query: string) {
 
     return parseReturn("remove", [collection, whereClause]);
 }
+
+// collection
+export function handleGet(query: string) {
+    if (!/^GET\s+COLLECTIONS$/i.test(query)) {
+        throw new Error("Invalid GET COLLECTIONS syntax.");
+    }
+    return parseReturn("getCollections", []);
+}
+
+export function handleCreate(query: string) {
+    const match = query.match(/^CREATE\s+COLLECTION\s+(\w+)$/i);
+    if (!match) throw new Error("Invalid CREATE COLLECTION syntax.");
+    return parseReturn("checkCollection", [match[1]]);
+}
+
+export function handleDrop(query: string) {
+    const match = query.match(/^DROP\s+COLLECTION\s+(\w+)$/i);
+    if (!match) throw new Error("Invalid DROP COLLECTION syntax.");
+    return parseReturn("removeCollection", [match[1]]);
+}
+
+export function handleExists(query: string) {
+    const match = query.match(/^EXISTS\s+COLLECTION\s+(\w+)$/i);
+    if (!match) throw new Error("Invalid EXISTS COLLECTION syntax.");
+    return parseReturn("issetCollection", [match[1]]);
+}
