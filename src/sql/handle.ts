@@ -76,7 +76,7 @@ export function handleGet(query: string) {
 
 export function handleCreate(query: string) {
     const match = query.match(
-        /^CREATE\s+(?:TABLE|COLLECTION)\s+(IF\s+NOT\s+EXISTS\s+)?(\w+)(?:\s*\([^)]*\))?$/i
+        /^CREATE\s+(?:TABLE|COLLECTION)\s+(IF\s+NOT\s+EXISTS\s+)?(\w+).*/i
     );
     if (!match) throw new Error("Invalid CREATE TABLE/COLLECTION syntax.");
     return parseReturn("checkCollection", [match[2]]);
