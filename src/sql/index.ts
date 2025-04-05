@@ -1,9 +1,18 @@
 import { ValtheraParser } from "../types";
-import { handleCreate, handleDelete, handleDrop, handleExists, handleGet, handleInsert, handleSelect, handleUpdate } from "./handle";
+import {
+    handleCreate,
+    handleDelete,
+    handleDrop,
+    handleExists,
+    handleGet,
+    handleInsert,
+    handleSelect,
+    handleUpdate
+} from "./handle";
 
 class SQLParser implements ValtheraParser {
     parse(query: string) {
-        query = query.trim();
+        query = query.replace(/\s+/g, " ").trim();
         const tokens = query.split(/\s+/);
         const method = tokens[0].toUpperCase();
 

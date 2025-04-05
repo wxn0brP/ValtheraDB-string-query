@@ -1,4 +1,4 @@
-import { parseReturn } from "./utils";
+import { parseReturn, parseSet } from "./utils";
 import { parseWhere } from "./where";
 
 export function handleSelect(query: string) {
@@ -50,7 +50,7 @@ export function handleUpdate(query: string) {
     if (!match) throw new Error("Invalid UPDATE syntax");
 
     const collection = match[1];
-    const setClause = this.parseSet(match[2]);
+    const setClause = parseSet(match[2]);
     const whereClause = parseWhere(match[3]);
 
     return parseReturn("update", [collection, whereClause, setClause]);
@@ -75,19 +75,21 @@ export function handleGet(query: string) {
 }
 
 export function handleCreate(query: string) {
-    const match = query.match(/^CREATE\s+COLLECTION\s+(\w+)$/i);
-    if (!match) throw new Error("Invalid CREATE COLLECTION syntax.");
-    return parseReturn("checkCollection", [match[1]]);
+    const match = query.match(
+        /^CREATE\s+(?:TABLE|COLLECTION)\s+(IF\s+NOT\s+EXISTS\s+)?(\w+)(?:\s*\([^)]*\))?$/i
+    );
+    if (!match) throw new Error("Invalid CREATE TABLE/COLLECTION syntax.");
+    return parseReturn("checkCollection", [match[2]]);
 }
 
 export function handleDrop(query: string) {
-    const match = query.match(/^DROP\s+COLLECTION\s+(\w+)$/i);
-    if (!match) throw new Error("Invalid DROP COLLECTION syntax.");
+    const match = query.match(/^DROP\s+(?:TABLE|COLLECTION)\s+(\w+)$/i);
+    if (!match) throw new Error("Invalid DROP TABLE/COLLECTION syntax.");
     return parseReturn("removeCollection", [match[1]]);
 }
 
 export function handleExists(query: string) {
-    const match = query.match(/^EXISTS\s+COLLECTION\s+(\w+)$/i);
-    if (!match) throw new Error("Invalid EXISTS COLLECTION syntax.");
+    const match = query.match(/^EXISTS\s+(?:TABLE|COLLECTION)\s+(\w+)$/i);
+    if (!match) throw new Error("Invalid EXISTS TABLE/COLLECTION syntax.");
     return parseReturn("issetCollection", [match[1]]);
 }
