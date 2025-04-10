@@ -83,7 +83,7 @@ export function handleCreate(query: string) {
 }
 
 export function handleDrop(query: string) {
-    const match = query.match(/^DROP\s+(?:TABLE|COLLECTION)\s+(\w+)$/i);
+    const match = query.match(/^DROP\s+(?:TABLE|COLLECTION)\s+(?:IF\s+EXISTS\s+)?(\w+)$/i);
     if (!match) throw new Error("Invalid DROP TABLE/COLLECTION syntax.");
     return parseReturn("removeCollection", [match[1]]);
 }
