@@ -7,7 +7,7 @@ const ValtheraDbParsers = {
 }
 
 const ValtheraDbRelations = {
-    
+
 }
 
 export { ValtheraDbParsers, ValtheraDbRelations };

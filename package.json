@@ -1,6 +1,6 @@
 {
     "name": "@wxn0brp/valthera-db-string-query",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "main": "dist/index.js",
     "author": "wxn0brP",
     "license": "MIT",
@@ -20,7 +20,13 @@
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
+            "default": "./dist/index.js",
             "import": "./dist/index.js"
+        },
+        "./*": {
+            "types": "./dist/*.d.ts",
+            "default": "./dist/*.js",
+            "import": "./dist/*.js"
         }
     }
 }
