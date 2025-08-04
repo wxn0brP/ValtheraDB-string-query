@@ -113,7 +113,7 @@ export function handleCreate(query: string) {
         /^CREATE\s+(?:TABLE|COLLECTION)\s+(IF\s+NOT\s+EXISTS\s+)?(\w+).*/i
     );
     if (!match) throw new Error("Invalid CREATE TABLE/COLLECTION syntax.");
-    return parseReturn("checkCollection", [match[2]]);
+    return parseReturn("ensureCollection", [match[2]]);
 }
 
 export function handleDrop(query: string) {
