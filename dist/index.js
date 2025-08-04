@@ -1,0 +1,9 @@
+import valtheraJsParser from "./js.js";
+import valtheraSQLParser from "./sql/index.js";
+const ValtheraDbParsers = {
+    js: valtheraJsParser,
+    sql: valtheraSQLParser
+};
+const ValtheraDbRelations = {};
+export { ValtheraDbParsers, ValtheraDbRelations };
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsT0FBTyxnQkFBZ0IsTUFBTSxNQUFNLENBQUM7QUFDcEMsT0FBTyxpQkFBaUIsTUFBTSxPQUFPLENBQUM7QUFFdEMsTUFBTSxpQkFBaUIsR0FBRztJQUN0QixFQUFFLEVBQUUsZ0JBQWdCO0lBQ3BCLEdBQUcsRUFBRSxpQkFBaUI7Q0FDekIsQ0FBQTtBQUVELE1BQU0sbUJBQW1CLEdBQUcsRUFFM0IsQ0FBQTtBQUVELE9BQU8sRUFBRSxpQkFBaUIsRUFBRSxtQkFBbUIsRUFBRSxDQUFDIn0=
