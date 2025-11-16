@@ -1,7 +1,7 @@
 type QueryObject = Record<string, any>;
 
 const operators: Record<string, string> = {
-    "=": "",
+    "=": null,
     "<": "$lt",
     ">": "$gt",
     "<=": "$lte",
@@ -10,6 +10,27 @@ const operators: Record<string, string> = {
     "IN": "$in",
     "NOT IN": "$nin"
 };
+
+function mergeQueries(target: QueryObject, source: QueryObject) {
+    for (const key in source) {
+        if (key.startsWith('$')) {
+            // If the key is an operator, simply add it
+            target[key] = source[key];
+        } else {
+            // If the key is a field, check if there is not already an operator in the target
+            if (target[key] !== undefined) {
+                // If target[key] is an object with an operator, merge the objects
+                if (typeof target[key] === 'object' && !Array.isArray(target[key])) {
+                    Object.assign(target[key], source[key]);
+                } else {
+                    target[key] = source[key];
+                }
+            } else {
+                target[key] = source[key];
+            }
+        }
+    }
+}
 
 export function parseWhere(where: string): QueryObject {
     if (!where) return {};
@@ -47,7 +68,7 @@ export function parseWhere(where: string): QueryObject {
             if (frames.length === 0) {
                 throw new Error("Unmatched closing parenthesis");
             }
-            const parentFrame = frames.pop();
+            const parentFrame = frames.pop()!;
             const parentCurrent = parentFrame.current;
             const parentOperatorStack = parentFrame.operatorStack;
             const parentStack = parentFrame.stack;
@@ -59,15 +80,21 @@ export function parseWhere(where: string): QueryObject {
                     parentStack.push(parentCurrent);
                     current = groupedQuery;
                 } else if (op === "AND") {
-                    current = { ...parentCurrent, ...groupedQuery };
+                    const newCurrent: QueryObject = {};
+                    mergeQueries(newCurrent, parentCurrent);
+                    mergeQueries(newCurrent, groupedQuery);
+                    current = newCurrent;
                 }
             } else {
-                current = { ...parentCurrent, ...groupedQuery };
+                const newCurrent: QueryObject = {};
+                mergeQueries(newCurrent, parentCurrent);
+                mergeQueries(newCurrent, groupedQuery);
+                current = newCurrent;
             }
 
             // Restore parent's stack and operator stack
             operatorStack = parentFrame.operatorStack;
-            stack = parentStack;
+            stack = parentFrame.stack;
         } else if (token.toUpperCase() === "AND" || token.toUpperCase() === "OR") {
             operatorStack.push(token.toUpperCase());
         } else {
@@ -82,11 +109,11 @@ export function parseWhere(where: string): QueryObject {
             }
 
             let key = token;
-            let op = tokens[++i]?.trim();
+            let opToken = tokens[++i]?.trim();
             let value: any = tokens[++i]?.trim();
 
-            if (!key || !op || value === undefined) {
-                throw new Error(`Invalid condition near '${key} ${op} ${value}'`);
+            if (!key || !opToken || value === undefined) {
+                throw new Error(`Invalid condition near '${key} ${opToken} ${value}'`);
             }
 
             // Handle quoted values
@@ -100,9 +127,9 @@ export function parseWhere(where: string): QueryObject {
             }
 
             // Handle IN and NOT IN operations
-            if (op.toUpperCase() === "IN" || op.toUpperCase() === "NOT IN") {
+            if (opToken.toUpperCase() === "IN" || opToken.toUpperCase() === "NOT IN") {
                 if (!value.startsWith("(") || !value.endsWith(")")) {
-                    throw new Error(`Invalid syntax for '${op}' near '${value}'`);
+                    throw new Error(`Invalid syntax for '${opToken}' near '${value}'`);
                 }
                 value = value.slice(1, -1).split(",").map((v: string) => {
                     v = v.trim();
@@ -113,16 +140,22 @@ export function parseWhere(where: string): QueryObject {
                 });
             }
 
-            // Map the operator to MongoDB's query operators
-            const mappedOp = operators[op.toUpperCase()] || "";
-            if (mappedOp) {
-                if (mappedOp === "$not") {
-                    current[key] = { [mappedOp]: value };
+            // Map the operator to the query operators
+            const mappedOp = operators[opToken.toUpperCase()];
+
+            if (mappedOp !== undefined) {
+                if (mappedOp === null) {
+                    // "=" operator - direct assignment
+                    current[key] = value;
                 } else {
-                    current[key] = current[key] || {};
-                    (current[key] as Record<string, any>)[mappedOp] = value;
+                    // Other operators - they go to the root level
+                    if (!current[mappedOp]) {
+                        current[mappedOp] = {};
+                    }
+                    (current[mappedOp] as Record<string, any>)[key] = value;
                 }
             } else {
+                // If operator not found, default to direct assignment
                 current[key] = value;
             }
         }
