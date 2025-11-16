@@ -10,7 +10,7 @@ export function handleSelect(query: string) {
     const whereClause = match[3] ? parseWhere(match[3]) : {};
 
     const findOpts = parseSelectClause(columnsPart);
-    return parseReturn("find", [collection, whereClause, {}, {}, findOpts]);
+    return parseReturn("find", [collection, whereClause, {}, findOpts]);
 }
 
 export function parseSelectClause(selectClause: string): { select?: string[]; exclude?: string[] } {
@@ -35,7 +35,7 @@ export function handleInsert(query: string) {
     if (!match) throw new Error("Invalid INSERT syntax");
     const collection = match[1];
     const keys = match[2].split(/\s*,\s*/);
-    
+
     function splitByCommasOutsideQuotes(str: string): string[] {
         const tokens: string[] = [];
         let current = '';
@@ -65,10 +65,10 @@ export function handleInsert(query: string) {
     const values = rawValues.map(v => {
         v = v.trim();
         if (v.length >= 2) {
-            if (v[0] === "'" && v[v.length-1] === "'") {
-                v = v.substring(1, v.length-1);
-            } else if (v[0] === '"' && v[v.length-1] === '"') {
-                v = v.substring(1, v.length-1);
+            if (v[0] === "'" && v[v.length - 1] === "'") {
+                v = v.substring(1, v.length - 1);
+            } else if (v[0] === '"' && v[v.length - 1] === '"') {
+                v = v.substring(1, v.length - 1);
             }
         }
         return v;
