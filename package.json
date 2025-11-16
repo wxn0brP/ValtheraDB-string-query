@@ -2,6 +2,12 @@
     "name": "@wxn0brp/valthera-db-string-query",
     "version": "0.0.7",
     "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wxn0brP/ValtheraDB-string-query.git"
+    },
+    "homepage": "https://github.com/wxn0brP/ValtheraDB-string-query",
     "author": "wxn0brP",
     "license": "MIT",
     "type": "module",
