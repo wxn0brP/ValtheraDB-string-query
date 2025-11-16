@@ -1,7 +1,7 @@
+import SQLParser from "#sql";
 import { describe, expect, test } from "bun:test";
-import { ValtheraDbParsers } from "../..";
 
-const sqlParser = new ValtheraDbParsers.sql();
+const sqlParser = new SQLParser();
 
 describe("SQL Parser - SELECT", () => {
     test("should parse a simple SELECT query", () => {
