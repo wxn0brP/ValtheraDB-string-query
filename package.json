@@ -1,5 +1,5 @@
 {
-    "name": "@wxn0brp/valthera-db-string-query",
+    "name": "@wxn0brp/db-string-query",
     "version": "0.0.7",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
