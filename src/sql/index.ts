@@ -1,14 +1,9 @@
 import { ValtheraParser } from "../types";
-import {
-    handleCreate,
-    handleDelete,
-    handleDrop,
-    handleExists,
-    handleGet,
-    handleInsert,
-    handleSelect,
-    handleUpdate
-} from "./handle";
+import { handleCreate, handleDrop, handleExists, handleGet } from "./handle/collection";
+import { handleDelete } from "./handle/delete";
+import { handleInsert } from "./handle/insert";
+import { handleSelect } from "./handle/select";
+import { handleUpdate } from "./handle/update";
 
 class SQLParser implements ValtheraParser {
     parse(query: string) {
