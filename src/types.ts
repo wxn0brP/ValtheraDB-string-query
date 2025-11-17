@@ -3,6 +3,14 @@ export interface ValtheraQuery {
     args: any[];
 }
 
+export interface Opts {
+    defaultDbKey: string;
+    tableDbMap?: Record<string, string>;
+}
+
 export interface ValtheraParser {
-    parse(query: string): ValtheraQuery;
+    parse(
+        query: string,
+        opts?: Opts,
+    ): ValtheraQuery;
 }

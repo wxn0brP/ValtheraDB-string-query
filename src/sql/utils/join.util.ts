@@ -22,17 +22,17 @@ export class JoinToRelationsEngine {
         else if (knownFks.has(rightFull))
             return { pk: left, fk: right };
 
-        if (leftTable === mainTable)
-            return { pk: left, fk: right };
-        else if (rightTable === mainTable)
-            return { pk: right, fk: left };
-
         // If either of the above conditions are met, use a heuristic: set pk to the field named "id" or "_id"
         if (leftField === "id" || leftField === "_id") {
             return { pk: left, fk: right };
         } else if (rightField === "id" || rightField === "_id") {
             return { pk: right, fk: left };
         }
+
+        if (leftTable === mainTable)
+            return { pk: left, fk: right };
+        else if (rightTable === mainTable)
+            return { pk: right, fk: left };
 
         // If still unsure, throw an error
         throw new Error(`Cannot determine pk/fk from condition: "${left} = ${right}"`);

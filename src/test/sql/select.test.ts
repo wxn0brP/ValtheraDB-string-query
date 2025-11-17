@@ -61,6 +61,27 @@ describe("SQL Parser - SELECT", () => {
         expect(parsedQuery.args[1]).toEqual({ $gt: { age: 18 }, status: "active" }); // where clause
     });
 
+    test("should parse a SELECT query with a JOIN clause", () => {
+        const query = "SELECT posts.*, users.name FROM posts JOIN users ON posts.userId = users.id WHERE posts.id = 1";
+        const parsedQuery = sqlParser.parse(query, { defaultDbKey: "db" });
+
+        expect(parsedQuery).toBeDefined();
+        expect(parsedQuery.method).toBe("relation-find");
+        expect(parsedQuery.args).toHaveLength(4);
+        expect(parsedQuery.args[0]).toEqual(["db", "posts"]); // path
+        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
+        expect(parsedQuery.args[2]).toEqual({
+            users: {
+                type: '1n',
+                path: ['db', 'posts'],
+                pk: 'id',
+                fk: 'userId',
+                as: 'users'
+            }
+        }); // relations
+        expect(parsedQuery.args[3]).toEqual({ select: ["posts.*", "users.name"] }); // select options
+    });
+
     test("should throw error for invalid SELECT syntax", () => {
         const query = "SELECT FROM users";
 

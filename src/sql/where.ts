@@ -109,6 +109,9 @@ export function parseWhere(where: string): QueryObject {
             }
 
             let key = token;
+            if (key.includes(".")) {
+                key = key.split(".").pop()!;
+            }
             let opToken = tokens[++i]?.trim();
             let value: any = tokens[++i]?.trim();
 
