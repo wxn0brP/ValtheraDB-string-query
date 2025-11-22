@@ -11,6 +11,7 @@ class SQLParser implements ValtheraParser {
         opts?: Opts
     ) {
         query = query.replace(/\s+/g, " ").trim();
+        if (query.endsWith(";")) query = query.slice(0, -1);
         const tokens = query.split(/\s+/);
         const method = tokens[0].toUpperCase();
 
