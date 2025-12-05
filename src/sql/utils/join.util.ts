@@ -10,6 +10,11 @@ export class JoinToRelationsEngine {
     ) { }
 
     private identifyPkFk(left: string, right: string, mainTable: string, knownFks: Set<string>): { pk: string, fk: string } {
+        if (leftTable === mainTable)
+            return { pk: left, fk: right };
+        else if (rightTable === mainTable)
+            return { pk: right, fk: left };
+
         const [leftTable, leftField] = left.split(".");
         const [rightTable, rightField] = right.split(".");
 
@@ -24,11 +29,6 @@ export class JoinToRelationsEngine {
         } else if (rightField === "id" || rightField === "_id") {
             return { pk: right, fk: left };
         }
-
-        if (leftTable === mainTable)
-            return { pk: left, fk: right };
-        else if (rightTable === mainTable)
-            return { pk: right, fk: left };
 
         // If still unsure, throw an error
         throw new Error(`Cannot determine pk/fk from condition: "${left} = ${right}"`);
@@ -49,7 +49,7 @@ export class JoinToRelationsEngine {
             const [pkTable, pkField] = pk.split(".");
             const [fkTable, fkField] = fk.split(".");
 
-            knownFks.add(`${fkTable}.${fkField}`);
+            knownFks.add(fk);
 
             const dbKey = this.tableDbMap?.[fkTable] || this.defaultDbKey;
 
