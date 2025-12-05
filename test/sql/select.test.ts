@@ -73,7 +73,7 @@ describe("SQL Parser - SELECT", () => {
         expect(parsedQuery.args[2]).toEqual({
             users: {
                 type: '1n',
-                path: ['db', 'posts'],
+                path: ['db', 'users'],
                 pk: 'id',
                 fk: 'userId',
                 as: 'users'
