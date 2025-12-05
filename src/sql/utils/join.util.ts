@@ -13,13 +13,9 @@ export class JoinToRelationsEngine {
         const [leftTable, leftField] = left.split(".");
         const [rightTable, rightField] = right.split(".");
 
-        // Check if one of the fields is already known as a foreign key
-        const leftFull = `${leftTable}.${leftField}`;
-        const rightFull = `${rightTable}.${rightField}`;
-
-        if (knownFks.has(leftFull))
+        if (knownFks.has(left))
             return { pk: right, fk: left };
-        else if (knownFks.has(rightFull))
+        else if (knownFks.has(right))
             return { pk: left, fk: right };
 
         // If either of the above conditions are met, use a heuristic: set pk to the field named "id" or "_id"
