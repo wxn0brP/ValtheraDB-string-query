@@ -74,8 +74,8 @@ describe("SQL Parser - SELECT", () => {
             users: {
                 type: '1n',
                 path: ['db', 'users'],
-                pk: 'id',
-                fk: 'userId',
+                pk: 'userId',
+                fk: 'id',
                 as: 'users'
             }
         }); // relations
