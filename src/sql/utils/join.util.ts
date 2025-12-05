@@ -10,13 +10,13 @@ export class JoinToRelationsEngine {
     ) { }
 
     private identifyPkFk(left: string, right: string, mainTable: string, knownFks: Set<string>): { pk: string, fk: string } {
+        const [leftTable, leftField] = left.split(".");
+        const [rightTable, rightField] = right.split(".");
+
         if (leftTable === mainTable)
             return { pk: left, fk: right };
         else if (rightTable === mainTable)
             return { pk: right, fk: left };
-
-        const [leftTable, leftField] = left.split(".");
-        const [rightTable, rightField] = right.split(".");
 
         if (knownFks.has(left))
             return { pk: right, fk: left };
