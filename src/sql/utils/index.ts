@@ -8,15 +8,17 @@ export function parseSet(setString: string) {
     return Object.fromEntries(
         setString.split(/\s*,\s*/).map(pair => {
             const [key, value]: any = pair.split(/\s*=\s*/);
-            let parsedValue: any = removeQuotes(value);
-            if (!isNaN(parsedValue)) parsedValue = Number(parsedValue);
-            return [key, parsedValue];
+            let parsedValue: any = value;
+            if (!isNaN(+value)) parsedValue = +value;
+            else parsedValue = removeQuotes(value);
+
+            return [removeQuotes(key), parsedValue];
         })
     );
 }
 
 export function removeQuotes(str: string) {
-    return str.replace(/^`|`$/g, "");
+    return str.replace(/^['"`]|['"`]$/g, "");
 }
 
 export function parseNum(str: string) {
