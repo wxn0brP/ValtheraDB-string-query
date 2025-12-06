@@ -11,7 +11,7 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "outDir": "./dist",
-        "inlineSourceMap": true,
+        "sourceMap": true,
         "declaration": true
     },
     "include": [
