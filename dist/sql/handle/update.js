@@ -1,0 +1,12 @@
+import { parseReturn, parseSet } from "../../sql/utils/index.js";
+import { parseWhere } from "../../sql/where.js";
+export function handleUpdate(query) {
+    const match = query.match(/UPDATE\s+([\w\/]+)\s+SET\s+(.+)\s+WHERE\s+(.+)/i);
+    if (!match)
+        throw new Error("Invalid UPDATE syntax");
+    const collection = match[1];
+    const setClause = parseSet(match[2]);
+    const whereClause = parseWhere(match[3]);
+    return parseReturn("update", [collection, whereClause, setClause]);
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXBkYXRlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vc3JjL3NxbC9oYW5kbGUvdXBkYXRlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxXQUFXLEVBQUUsUUFBUSxFQUFFLE1BQU0sWUFBWSxDQUFDO0FBQ25ELE9BQU8sRUFBRSxVQUFVLEVBQUUsTUFBTSxZQUFZLENBQUM7QUFFeEMsTUFBTSxVQUFVLFlBQVksQ0FBQyxLQUFhO0lBQ3RDLE1BQU0sS0FBSyxHQUFHLEtBQUssQ0FBQyxLQUFLLENBQUMsaURBQWlELENBQUMsQ0FBQztJQUM3RSxJQUFJLENBQUMsS0FBSztRQUFFLE1BQU0sSUFBSSxLQUFLLENBQUMsdUJBQXVCLENBQUMsQ0FBQztJQUVyRCxNQUFNLFVBQVUsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDNUIsTUFBTSxTQUFTLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO0lBQ3JDLE1BQU0sV0FBVyxHQUFHLFVBQVUsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztJQUV6QyxPQUFPLFdBQVcsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxVQUFVLEVBQUUsV0FBVyxFQUFFLFNBQVMsQ0FBQyxDQUFDLENBQUM7QUFDdkUsQ0FBQyJ9
