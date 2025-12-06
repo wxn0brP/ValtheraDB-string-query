@@ -2,7 +2,7 @@ import { parseNum, parseReturn } from "#sql/utils";
 import { removeQuotes } from "#sql/utils";
 
 export function handleInsert(query: string) {
-    const match = query.match(/INSERT INTO\s+((?:`[^`]+`|"[^"]+"|\w+(?:\.\w+)*))\s*\(\s*([^)]+)\s*\)\s*VALUES\s*\(\s*([^)]+)\s*\)/i);
+    const match = query.match(/INSERT INTO\s+((?:`[^`]+`|"[^"]+"|\w+(?:\.\w+)*))\s*\(\s*([^)]+)\s*\)\s*VALUES\s*\((.*)\)/i);
     if (!match) throw new Error("Invalid INSERT syntax");
     const collection = match[1];
     const keys = match[2].split(/\s*,\s*/);

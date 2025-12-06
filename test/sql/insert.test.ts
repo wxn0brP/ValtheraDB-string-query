@@ -92,4 +92,15 @@ describe("SQL Parser - INSERT", () => {
 			description: "User, with 'special' chars"
 		});
 	});
+
+	test("9. should handle INSERT with () in values", () => {
+		const query = "INSERT INTO users (name, price) VALUES ('John (VIP)', 99.99)";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery).toBeDefined();
+		expect(parsedQuery.method).toBe("add");
+		expect(parsedQuery.args).toHaveLength(2);
+		expect(parsedQuery.args[0]).toBe("users"); // collection name
+		expect(parsedQuery.args[1]).toEqual({ name: "John (VIP)", price: 99.99 });
+	});
 });
