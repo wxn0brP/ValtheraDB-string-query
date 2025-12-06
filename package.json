@@ -1,0 +1,46 @@
+{
+  "name": "@wxn0brp/db-string-query",
+  "version": "0.0.12",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxn0brP/ValtheraDB-string-query.git"
+  },
+  "homepage": "https://github.com/wxn0brP/ValtheraDB-string-query",
+  "author": "wxn0brP",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "*",
+    "@types/node": "*",
+    "@wxn0brp/db-core": "^0.2.7",
+    "json5": "^2.2.3",
+    "tsc-alias": "*",
+    "typescript": "*"
+  },
+  "peerDependencies": {
+    "@wxn0brp/db-core": ">=0.2.7",
+    "json5": "^2.2.3"
+  },
+  "peerDependenciesMeta": {
+    "json5": {
+      "optional": true
+    },
+    "@wxn0brp/db-core": {
+      "optional": true
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js",
+      "import": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js",
+      "import": "./dist/*.js"
+    }
+  }
+}
