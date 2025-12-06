@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 const sqlParser = new SQLParser();
 
 describe("SQL Parser - UPDATE", () => {
-    test("should parse a simple UPDATE query", () => {
+    test("1. should parse a simple UPDATE query", () => {
         const query = "UPDATE users SET name = 'John' WHERE id = 1";
         const parsedQuery = sqlParser.parse(query);
 
@@ -16,7 +16,7 @@ describe("SQL Parser - UPDATE", () => {
         expect(parsedQuery.args[2]).toEqual({ name: "John" }); // set clause
     });
 
-    test("should parse UPDATE with multiple SET fields", () => {
+    test("2. should parse UPDATE with multiple SET fields", () => {
         const query = "UPDATE users SET name = 'Jane', email = 'jane@example.com' WHERE id = 2";
         const parsedQuery = sqlParser.parse(query);
 
@@ -28,7 +28,7 @@ describe("SQL Parser - UPDATE", () => {
         expect(parsedQuery.args[2]).toEqual({ name: "Jane", email: "jane@example.com" }); // set clause
     });
 
-    test("should parse UPDATE with numeric values", () => {
+    test("3. should parse UPDATE with numeric values", () => {
         const query = "UPDATE products SET price = 29.99, stock = 100 WHERE id = 1";
         const parsedQuery = sqlParser.parse(query);
 
@@ -40,7 +40,7 @@ describe("SQL Parser - UPDATE", () => {
         expect(parsedQuery.args[2]).toEqual({ price: 29.99, stock: 100 }); // set clause
     });
 
-    test("should parse UPDATE with string values containing spaces", () => {
+    test("4. should parse UPDATE with string values containing spaces", () => {
         const query = "UPDATE posts SET title = 'Hello World Post', content = 'This is the content' WHERE id = 1";
         const parsedQuery = sqlParser.parse(query);
 
@@ -55,7 +55,7 @@ describe("SQL Parser - UPDATE", () => {
         }); // set clause
     });
 
-    test("should throw error for invalid UPDATE syntax", () => {
+    test("5. should throw error for invalid UPDATE syntax", () => {
         const query = "UPDATE users name = 'John' WHERE id = 1"; // missing SET keyword
 
         expect(() => {
@@ -63,7 +63,7 @@ describe("SQL Parser - UPDATE", () => {
         }).toThrow("Invalid UPDATE syntax");
     });
 
-    test("should handle UPDATE with complex WHERE conditions", () => {
+    test("6. should handle UPDATE with complex WHERE conditions", () => {
         const query = "UPDATE users SET status = 'inactive' WHERE age > 65 AND active = 1";
         const parsedQuery = sqlParser.parse(query);
 
@@ -75,7 +75,7 @@ describe("SQL Parser - UPDATE", () => {
         expect(parsedQuery.args[2]).toEqual({ status: "inactive" }); // set clause
     });
 
-    test("should throw error when there is no WHERE clause", () => {
+    test("7. should throw error when there is no WHERE clause", () => {
         const query = "UPDATE users SET name = 'John'"; // missing WHERE
 
         expect(() => {

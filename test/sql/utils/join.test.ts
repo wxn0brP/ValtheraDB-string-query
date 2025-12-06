@@ -2,7 +2,7 @@ import { JoinClause, JoinToRelationsEngine } from "#sql/utils/join.util";
 import { describe, expect, test } from "bun:test";
 
 describe("SQL Utils - Join", () => {
-    test("works", () => {
+    test("1. works", () => {
         const joinClauses: JoinClause = {
             comments: "posts.id = comments.post_id",
             users: "comments.user_id = users.id",

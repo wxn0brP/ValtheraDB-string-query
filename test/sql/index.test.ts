@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 const sqlParser = new SQLParser();
 
 describe("SQL Parser - SELECT", () => {
-    test("should parse with ;", () => {
+    test("1. should parse with ;", () => {
         const query = "SELECT * FROM users WHERE id = 1;";
         const parsedQuery = sqlParser.parse(query);
 

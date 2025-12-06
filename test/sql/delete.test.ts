@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 const sqlParser = new SQLParser();
 
 describe("SQL Parser - DELETE", () => {
-	test("should parse a simple DELETE query", () => {
+	test("1. should parse a simple DELETE query", () => {
 		const query = "DELETE FROM users WHERE id = 1";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -15,7 +15,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
 	});
 
-	test("should parse DELETE query without WHERE clause", () => {
+	test("2. should parse DELETE query without WHERE clause", () => {
 		const query = "DELETE FROM users";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -26,7 +26,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({}); // empty where clause
 	});
 
-	test("should parse DELETE with complex WHERE conditions", () => {
+	test("3. should parse DELETE with complex WHERE conditions", () => {
 		const query = "DELETE FROM users WHERE age > 65 AND status = 'inactive'";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -37,7 +37,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({ $gt: { age: 65 }, status: "inactive" }); // where clause
 	});
 
-	test("should parse DELETE with string values", () => {
+	test("4. should parse DELETE with string values", () => {
 		const query = "DELETE FROM posts WHERE title = 'Unwanted Post'";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -48,7 +48,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({ title: "Unwanted Post" }); // where clause
 	});
 
-	test("should parse DELETE with numeric values", () => {
+	test("5. should parse DELETE with numeric values", () => {
 		const query = "DELETE FROM products WHERE price = 0";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -59,7 +59,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({ price: 0 }); // where clause
 	});
 
-	test("should throw error for invalid DELETE syntax", () => {
+	test("6. should throw error for invalid DELETE syntax", () => {
 		const query = "DELETE users WHERE id = 1"; // missing FROM keyword
 
 		expect(() => {
@@ -67,7 +67,7 @@ describe("SQL Parser - DELETE", () => {
 		}).toThrow("Invalid DELETE syntax");
 	});
 
-	test("should parse DELETE with quoted string values", () => {
+	test("7. should parse DELETE with quoted string values", () => {
 		const query = "DELETE FROM users WHERE name = 'John Doe'";
 		const parsedQuery = sqlParser.parse(query);
 
@@ -78,7 +78,7 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery.args[1]).toEqual({ name: "John Doe" }); // where clause
 	});
 
-	test("should handle DELETE with multiple condition types", () => {
+	test("8. should handle DELETE with multiple condition types", () => {
 		const query = "DELETE FROM orders WHERE total > 1000 AND status = 'cancelled' AND user_id != 5";
 		const parsedQuery = sqlParser.parse(query);
 
