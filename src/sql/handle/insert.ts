@@ -1,7 +1,8 @@
-import { parseReturn } from "#sql/utils";
+import { parseNum, parseReturn } from "#sql/utils";
+import { removeQuotes } from "#sql/utils";
 
 export function handleInsert(query: string) {
-    const match = query.match(/INSERT INTO ([\w\/]+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i);
+    const match = query.match(/INSERT INTO\s+((?:`[^`]+`|"[^"]+"|\w+(?:\.\w+)*))\s*\(\s*([^)]+)\s*\)\s*VALUES\s*\(\s*([^)]+)\s*\)/i);
     if (!match) throw new Error("Invalid INSERT syntax");
     const collection = match[1];
     const keys = match[2].split(/\s*,\s*/);
@@ -45,6 +46,10 @@ export function handleInsert(query: string) {
     });
 
     if (keys.length !== values.length) throw new Error("Number of columns and values does not match");
-    const data = Object.fromEntries(keys.map((k, i) => [k, isNaN(values[i] as any) ? values[i] : Number(values[i])]));
-    return parseReturn("add", [collection, data]);
+
+    const data = keys.map((k, i) => [
+        removeQuotes(k),
+        parseNum(values[i])
+    ]);
+    return parseReturn("add", [removeQuotes(collection), Object.fromEntries(data)]);
 }

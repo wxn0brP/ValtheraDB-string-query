@@ -1,7 +1,7 @@
 import { parseReturn } from "#sql/utils";
 import { parseWhere } from "#sql/where";
 import { Opts } from "#types.js";
-import { JoinToRelationsEngine } from "../utils/join.util.js";
+import { JoinToRelationsEngine } from "#sql/utils/join.util";
 
 export function handleSelect(
     query: string,
