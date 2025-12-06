@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/wxn0brP/ValtheraDB-string-query/compare/v0.0.11...v0.0.12) (2025-12-06)
+
+
+### Bug Fixes
+
+* insert handle () ([5695a97](https://github.com/wxn0brP/ValtheraDB-string-query/commit/5695a9747d9dd03a01e7c3edc411d7b9413924ab))
+
 ### [0.0.11](https://github.com/wxn0brP/ValtheraDB-string-query/compare/v0.0.10...v0.0.11) (2025-12-06)
 
 
