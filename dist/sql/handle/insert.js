@@ -1,0 +1,56 @@
+import { parseNum, parseReturn } from "../../sql/utils/index.js";
+import { removeQuotes } from "../../sql/utils/index.js";
+export function handleInsert(query) {
+    const match = query.match(/INSERT INTO\s+((?:`[^`]+`|"[^"]+"|\w+(?:\.\w+)*))\s*\(\s*([^)]+)\s*\)\s*VALUES\s*\(\s*([^)]+)\s*\)/i);
+    if (!match)
+        throw new Error("Invalid INSERT syntax");
+    const collection = match[1];
+    const keys = match[2].split(/\s*,\s*/);
+    function splitByCommasOutsideQuotes(str) {
+        const tokens = [];
+        let current = '';
+        let inSingleQuote = false;
+        let inDoubleQuote = false;
+        for (let i = 0; i < str.length; i++) {
+            const char = str[i];
+            if ((char === "'") && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                current += char;
+            }
+            else if (char === '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                current += char;
+            }
+            else if (char === ',' && !inSingleQuote && !inDoubleQuote) {
+                tokens.push(current);
+                current = '';
+            }
+            else {
+                current += char;
+            }
+        }
+        tokens.push(current);
+        return tokens;
+    }
+    const rawValues = splitByCommasOutsideQuotes(match[3]);
+    const values = rawValues.map(v => {
+        v = v.trim();
+        if (v.length >= 2) {
+            if (v[0] === "'" && v[v.length - 1] === "'") {
+                v = v.substring(1, v.length - 1);
+            }
+            else if (v[0] === '"' && v[v.length - 1] === '"') {
+                v = v.substring(1, v.length - 1);
+            }
+        }
+        return v;
+    });
+    if (keys.length !== values.length)
+        throw new Error("Number of columns and values does not match");
+    const data = keys.map((k, i) => [
+        removeQuotes(k),
+        parseNum(values[i])
+    ]);
+    return parseReturn("add", [removeQuotes(collection), Object.fromEntries(data)]);
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5zZXJ0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vc3JjL3NxbC9oYW5kbGUvaW5zZXJ0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sRUFBRSxRQUFRLEVBQUUsV0FBVyxFQUFFLE1BQU0sWUFBWSxDQUFDO0FBQ25ELE9BQU8sRUFBRSxZQUFZLEVBQUUsTUFBTSxZQUFZLENBQUM7QUFFMUMsTUFBTSxVQUFVLFlBQVksQ0FBQyxLQUFhO0lBQ3RDLE1BQU0sS0FBSyxHQUFHLEtBQUssQ0FBQyxLQUFLLENBQUMscUdBQXFHLENBQUMsQ0FBQztJQUNqSSxJQUFJLENBQUMsS0FBSztRQUFFLE1BQU0sSUFBSSxLQUFLLENBQUMsdUJBQXVCLENBQUMsQ0FBQztJQUNyRCxNQUFNLFVBQVUsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDNUIsTUFBTSxJQUFJLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxTQUFTLENBQUMsQ0FBQztJQUV2QyxTQUFTLDBCQUEwQixDQUFDLEdBQVc7UUFDM0MsTUFBTSxNQUFNLEdBQWEsRUFBRSxDQUFDO1FBQzVCLElBQUksT0FBTyxHQUFHLEVBQUUsQ0FBQztRQUNqQixJQUFJLGFBQWEsR0FBRyxLQUFLLENBQUM7UUFDMUIsSUFBSSxhQUFhLEdBQUcsS0FBSyxDQUFDO1FBRTFCLEtBQUssSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsR0FBRyxHQUFHLENBQUMsTUFBTSxFQUFFLENBQUMsRUFBRSxFQUFFLENBQUM7WUFDbEMsTUFBTSxJQUFJLEdBQUcsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1lBQ3BCLElBQUksQ0FBQyxJQUFJLEtBQUssR0FBRyxDQUFDLElBQUksQ0FBQyxhQUFhLEVBQUUsQ0FBQztnQkFDbkMsYUFBYSxHQUFHLENBQUMsYUFBYSxDQUFDO2dCQUMvQixPQUFPLElBQUksSUFBSSxDQUFDO1lBQ3BCLENBQUM7aUJBQU0sSUFBSSxJQUFJLEtBQUssR0FBRyxJQUFJLENBQUMsYUFBYSxFQUFFLENBQUM7Z0JBQ3hDLGFBQWEsR0FBRyxDQUFDLGFBQWEsQ0FBQztnQkFDL0IsT0FBTyxJQUFJLElBQUksQ0FBQztZQUNwQixDQUFDO2lCQUFNLElBQUksSUFBSSxLQUFLLEdBQUcsSUFBSSxDQUFDLGFBQWEsSUFBSSxDQUFDLGFBQWEsRUFBRSxDQUFDO2dCQUMxRCxNQUFNLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDO2dCQUNyQixPQUFPLEdBQUcsRUFBRSxDQUFDO1lBQ2pCLENBQUM7aUJBQU0sQ0FBQztnQkFDSixPQUFPLElBQUksSUFBSSxDQUFDO1lBQ3BCLENBQUM7UUFDTCxDQUFDO1FBQ0QsTUFBTSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQztRQUNyQixPQUFPLE1BQU0sQ0FBQztJQUNsQixDQUFDO0lBRUQsTUFBTSxTQUFTLEdBQUcsMEJBQTBCLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDdkQsTUFBTSxNQUFNLEdBQUcsU0FBUyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsRUFBRTtRQUM3QixDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksRUFBRSxDQUFDO1FBQ2IsSUFBSSxDQUFDLENBQUMsTUFBTSxJQUFJLENBQUMsRUFBRSxDQUFDO1lBQ2hCLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxLQUFLLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDLE1BQU0sR0FBRyxDQUFDLENBQUMsS0FBSyxHQUFHLEVBQUUsQ0FBQztnQkFDMUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxTQUFTLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxNQUFNLEdBQUcsQ0FBQyxDQUFDLENBQUM7WUFDckMsQ0FBQztpQkFBTSxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUMsS0FBSyxHQUFHLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxNQUFNLEdBQUcsQ0FBQyxDQUFDLEtBQUssR0FBRyxFQUFFLENBQUM7Z0JBQ2pELENBQUMsR0FBRyxDQUFDLENBQUMsU0FBUyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsTUFBTSxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQ3JDLENBQUM7UUFDTCxDQUFDO1FBQ0QsT0FBTyxDQUFDLENBQUM7SUFDYixDQUFDLENBQUMsQ0FBQztJQUVILElBQUksSUFBSSxDQUFDLE1BQU0sS0FBSyxNQUFNLENBQUMsTUFBTTtRQUFFLE1BQU0sSUFBSSxLQUFLLENBQUMsNkNBQTZDLENBQUMsQ0FBQztJQUVsRyxNQUFNLElBQUksR0FBRyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxFQUFFLENBQUM7UUFDNUIsWUFBWSxDQUFDLENBQUMsQ0FBQztRQUNmLFFBQVEsQ0FBQyxNQUFNLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDdEIsQ0FBQyxDQUFDO0lBQ0gsT0FBTyxXQUFXLENBQUMsS0FBSyxFQUFFLENBQUMsWUFBWSxDQUFDLFVBQVUsQ0FBQyxFQUFFLE1BQU0sQ0FBQyxXQUFXLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBQ3BGLENBQUMifQ==
