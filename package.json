@@ -17,7 +17,7 @@
     "devDependencies": {
         "@types/bun": "*",
         "@types/node": "*",
-        "@wxn0brp/db-core": "^0.2.7",
+        "@wxn0brp/db-core": "^0.3.0",
         "json5": "^2.2.3",
         "tsc-alias": "*",
         "typescript": "*"
