@@ -142,4 +142,28 @@ describe("SQL Parser - SELECT", () => {
         const parsedQuery = sqlParser.parse(query);
         expect(parsedQuery.args[1]).toEqual({ $nin: { status: [1, 2] } });
     });
+
+    test("11. should parse ILIKE operator (case insensitive LIKE)", () => {
+        const query = "SELECT * FROM users WHERE name ILIKE '%john%'";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $regex: { name: "(?i)^.*john.*$" } });
+    });
+
+    test("11b. should parse NOT ILIKE operator", () => {
+        const query = "SELECT * FROM users WHERE name NOT ILIKE '%john%'";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $not: { $regex: { name: "(?i)^.*john.*$" } } });
+    });
+
+    test("12. should parse BETWEEN operator", () => {
+        const query = "SELECT * FROM users WHERE age BETWEEN 18 AND 30";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $between: { age: [18, 30] } });
+    });
+
+    test("12b. should parse NOT BETWEEN operator", () => {
+        const query = "SELECT * FROM users WHERE age NOT BETWEEN 18 AND 30";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $not: { $between: { age: [18, 30] } } });
+    });
 });

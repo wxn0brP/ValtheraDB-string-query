@@ -1,3 +1,6 @@
+// It’s cheap - it’s cheap
+// It’s good - it’s cheap
+
 type QueryObject = Record<string, any>;
 
 const operators: Record<string, string> = {
@@ -18,10 +21,10 @@ function escapeRegex(string: string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function likeToRegex(pattern: string) {
+function likeToRegex(pattern: string, caseInsensitive: boolean = false) {
     const escaped = escapeRegex(pattern);
     const converted = escaped.replace(/%/g, '.*').replace(/_/g, '.');
-    return `^${converted}$`;
+    return `${caseInsensitive ? '(?i)' : ''}^${converted}$`;
 }
 
 function mergeQueries(target: QueryObject, source: QueryObject) {
@@ -131,7 +134,7 @@ export function parseWhere(where: string): QueryObject {
                 const upperOp = opToken.toUpperCase();
                 const nextToken = tokens[i + 1]?.trim().toUpperCase();
 
-                if (upperOp === "NOT" && (nextToken === "IN" || nextToken === "LIKE" || nextToken === "ANY")) {
+                if (upperOp === "NOT" && (nextToken === "IN" || nextToken === "LIKE" || nextToken === "ILIKE" || nextToken === "ANY" || nextToken === "BETWEEN")) {
                     opToken = `NOT ${nextToken}`;
                     i++;
                 } else if (upperOp === "IS") {
@@ -192,13 +195,14 @@ export function parseWhere(where: string): QueryObject {
                 });
             }
 
-            // Handle LIKE/NOT LIKE specially to convert to regex
-            if (opToken.toUpperCase() === "LIKE" || opToken.toUpperCase() === "NOT LIKE") {
+            // Handle LIKE/NOT LIKE/ILIKE/NOT ILIKE specially to convert to regex
+            if (opToken.toUpperCase() === "LIKE" || opToken.toUpperCase() === "NOT LIKE" || opToken.toUpperCase() === "ILIKE" || opToken.toUpperCase() === "NOT ILIKE") {
                 if (typeof value !== 'string') {
                     throw new Error(`LIKE value must be a string, got ${value}`);
                 }
-                const regex = likeToRegex(value);
-                const isNot = opToken.toUpperCase() === "NOT LIKE";
+                const isCaseInsensitive = opToken.toUpperCase().includes("ILIKE");
+                const regex = likeToRegex(value, isCaseInsensitive);
+                const isNot = opToken.toUpperCase().startsWith("NOT");
 
                 if (isNot) {
                     // NOT LIKE -> {$not: {$regex: {key: regex}}}
@@ -211,6 +215,35 @@ export function parseWhere(where: string): QueryObject {
                     current["$regex"][key] = regex;
                 }
                 continue; // processing done for this token
+            }
+
+            // Handle BETWEEN/NOT BETWEEN
+            if (opToken.toUpperCase() === "BETWEEN" || opToken.toUpperCase() === "NOT BETWEEN") {
+                const andToken = tokens[++i]?.trim();
+                if (!andToken || andToken.toUpperCase() !== "AND") {
+                    throw new Error("BETWEEN expects AND, got " + andToken);
+                }
+                let val2: any = tokens[++i]?.trim();
+
+                // Handle quoted values for val2
+                if (typeof val2 === 'string' && ((val2.startsWith("'") && val2.endsWith("'")) || (val2.startsWith('"') && val2.endsWith('"')))) {
+                    val2 = val2.slice(1, -1);
+                }
+                // Handle numerics for val2
+                if (val2 !== null && !isNaN(Number(val2))) {
+                    val2 = Number(val2);
+                }
+
+                if (opToken.toUpperCase() === "NOT BETWEEN") {
+                    if (!current["$not"]) current["$not"] = {};
+                    if (!current["$not"]["$between"]) current["$not"]["$between"] = {};
+                    current["$not"]["$between"][key] = [value, val2];
+                } else {
+                    // BETWEEN -> {$between: {key: [val1, val2]}}
+                    if (!current["$between"]) current["$between"] = {};
+                    current["$between"][key] = [value, val2];
+                }
+                continue;
             }
 
             // Map the operator to the query operators
