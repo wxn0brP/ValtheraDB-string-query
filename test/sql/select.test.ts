@@ -15,6 +15,17 @@ describe("SQL Parser - SELECT", () => {
         expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
     });
 
+    test("1b. should parse a simple SELECT query without spaces", () => {
+        const query = "SELECT * FROM users WHERE id=1";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery).toBeDefined();
+        expect(parsedQuery.method).toBe("find");
+        expect(parsedQuery.args).toHaveLength(4);
+        expect(parsedQuery.args[0]).toBe("users"); // collection name
+        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
+    });
+
     test("2. should parse a SELECT query with specific columns", () => {
         const query = "SELECT name, email FROM users WHERE active = 1";
         const parsedQuery = sqlParser.parse(query);
@@ -24,7 +35,19 @@ describe("SQL Parser - SELECT", () => {
         expect(parsedQuery.args).toHaveLength(4);
         expect(parsedQuery.args[0]).toBe("users"); // collection name
         expect(parsedQuery.args[1]).toEqual({ active: 1 }); // where clause
+        expect(parsedQuery.args[1]).toEqual({ active: 1 }); // where clause
         expect(parsedQuery.args[3]).toEqual({ select: ["name", "email"] }); // select options
+    });
+
+    test("2b. should parse a SELECT query with NOT IN", () => {
+        const query = "SELECT * FROM users WHERE status NOT IN (1, 2)";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery).toBeDefined();
+        expect(parsedQuery.method).toBe("find");
+        expect(parsedQuery.args).toHaveLength(4);
+        expect(parsedQuery.args[0]).toBe("users");
+        expect(parsedQuery.args[1]).toEqual({ $nin: { status: [1, 2] } });
     });
 
     test("3. should parse a SELECT query without WHERE clause", () => {
@@ -88,5 +111,35 @@ describe("SQL Parser - SELECT", () => {
         expect(() => {
             sqlParser.parse(query);
         }).toThrow();
+    });
+
+    test("8. should parse LIKE operator", () => {
+        const query = "SELECT * FROM users WHERE name LIKE '%John%'";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $regex: { name: "^.*John.*$" } });
+    });
+
+    test("8b. should parse NOT LIKE operator", () => {
+        const query = "SELECT * FROM users WHERE name NOT LIKE '%John%'";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $not: { $regex: { name: "^.*John.*$" } } });
+    });
+
+    test("9. should parse IS NULL operator", () => {
+        const query = "SELECT * FROM users WHERE deletedAt IS NULL";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ deletedAt: null });
+    });
+
+    test("9b. should parse IS NOT NULL operator", () => {
+        const query = "SELECT * FROM users WHERE deletedAt IS NOT NULL";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $not: { deletedAt: null } });
+    });
+
+    test("10. should parse NOT ANY operator (alias for NOT IN)", () => {
+        const query = "SELECT * FROM users WHERE status NOT ANY (1, 2)";
+        const parsedQuery = sqlParser.parse(query);
+        expect(parsedQuery.args[1]).toEqual({ $nin: { status: [1, 2] } });
     });
 });

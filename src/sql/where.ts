@@ -8,8 +8,21 @@ const operators: Record<string, string> = {
     ">=": "$gte",
     "!=": "$not",
     "IN": "$in",
-    "NOT IN": "$nin"
+    "NOT IN": "$nin",
+    "NOT ANY": "$nin",
+    "IS": null,
+    "IS NOT": "$not"
 };
+
+function escapeRegex(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function likeToRegex(pattern: string) {
+    const escaped = escapeRegex(pattern);
+    const converted = escaped.replace(/%/g, '.*').replace(/_/g, '.');
+    return `^${converted}$`;
+}
 
 function mergeQueries(target: QueryObject, source: QueryObject) {
     for (const key in source) {
@@ -40,7 +53,7 @@ export function parseWhere(where: string): QueryObject {
     // Tokenize the input string, handling parentheses and quoted values
     const tokens = where
         .replace(/\s+(?=(?:[^'"]*['"][^'"]*['"])*[^'"]*$)/g, " ")
-        .match(/(?:\(|\)|'[^']*'|"[^"]*"|[^\s()'"]+)/g) || [];
+        .match(/(?:\(|\)|'[^']*'|"[^"]*"|>=|<=|!=|<>|=|<|>|[^\s()=<>!]+)/g) || [];
 
     let frames: Array<{ current: QueryObject, operatorStack: string[], stack: any[] }> = [];
     let current: QueryObject = {};
@@ -113,6 +126,26 @@ export function parseWhere(where: string): QueryObject {
                 key = key.split(".").pop()!;
             }
             let opToken = tokens[++i]?.trim();
+            // Handle multi-word operators
+            if (opToken) {
+                const upperOp = opToken.toUpperCase();
+                const nextToken = tokens[i + 1]?.trim().toUpperCase();
+
+                if (upperOp === "NOT" && (nextToken === "IN" || nextToken === "LIKE" || nextToken === "ANY")) {
+                    opToken = `NOT ${nextToken}`;
+                    i++;
+                } else if (upperOp === "IS") {
+                    if (nextToken === "NOT") {
+                        opToken = "IS NOT";
+                        i++;
+                        // Check for NULL
+                        if (tokens[i + 1]?.trim().toUpperCase() === "NULL") {
+                            // Correctly consume NULL as value
+                        }
+                    }
+                }
+            }
+
             let value: any = tokens[++i]?.trim();
 
             if (!key || !opToken || value === undefined) {
@@ -120,17 +153,33 @@ export function parseWhere(where: string): QueryObject {
             }
 
             // Handle quoted values
-            if ((value.startsWith("'") && value.endsWith("'")) || (value.startsWith('"') && value.endsWith('"'))) {
+            if (typeof value === 'string' && ((value.startsWith("'") && value.endsWith("'")) || (value.startsWith('"') && value.endsWith('"')))) {
                 value = value.slice(1, -1);
             }
 
+            // Handle NULL value
+            if (typeof value === 'string' && value.toUpperCase() === "NULL") {
+                value = null;
+            }
+
             // Parse numeric values
-            if (!isNaN(Number(value))) {
+            if (value !== null && !isNaN(Number(value))) {
                 value = Number(value);
             }
 
-            // Handle IN and NOT IN operations
-            if (opToken.toUpperCase() === "IN" || opToken.toUpperCase() === "NOT IN") {
+            // Handle IN, NOT IN, NOT ANY operations
+            if (opToken.toUpperCase() === "IN" || opToken.toUpperCase() === "NOT IN" || opToken.toUpperCase() === "NOT ANY") {
+                // If the value is just "(", we need to consume tokens until we find the closing ")"
+                if (value === "(") {
+                    let collected = "(";
+                    while (i < tokens.length - 1) {
+                        const next = tokens[++i];
+                        collected += next;
+                        if (next === ")") break;
+                    }
+                    value = collected;
+                }
+
                 if (!value.startsWith("(") || !value.endsWith(")")) {
                     throw new Error(`Invalid syntax for '${opToken}' near '${value}'`);
                 }
@@ -141,6 +190,27 @@ export function parseWhere(where: string): QueryObject {
                     }
                     return isNaN(Number(v)) ? v : Number(v);
                 });
+            }
+
+            // Handle LIKE/NOT LIKE specially to convert to regex
+            if (opToken.toUpperCase() === "LIKE" || opToken.toUpperCase() === "NOT LIKE") {
+                if (typeof value !== 'string') {
+                    throw new Error(`LIKE value must be a string, got ${value}`);
+                }
+                const regex = likeToRegex(value);
+                const isNot = opToken.toUpperCase() === "NOT LIKE";
+
+                if (isNot) {
+                    // NOT LIKE -> {$not: {$regex: {key: regex}}}
+                    if (!current["$not"]) current["$not"] = {};
+                    if (!current["$not"]["$regex"]) current["$not"]["$regex"] = {};
+                    current["$not"]["$regex"][key] = regex;
+                } else {
+                    // LIKE -> {$regex: {key: regex}}
+                    if (!current["$regex"]) current["$regex"] = {};
+                    current["$regex"][key] = regex;
+                }
+                continue; // processing done for this token
             }
 
             // Map the operator to the query operators
