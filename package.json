@@ -17,19 +17,14 @@
     "devDependencies": {
         "@types/bun": "*",
         "@types/node": "*",
-        "@wxn0brp/db-core": "^0.4.0",
-        "json5": "^2.2.3",
+        "@wxn0brp/db-core": "~0.9.0",
         "tsc-alias": "*",
         "typescript": "*"
     },
     "peerDependencies": {
-        "@wxn0brp/db-core": ">=0.4.0",
-        "json5": "^2.2.3"
+        "@wxn0brp/db-core": "~0.9.0"
     },
     "peerDependenciesMeta": {
-        "json5": {
-            "optional": true
-        },
         "@wxn0brp/db-core": {
             "optional": true
         }

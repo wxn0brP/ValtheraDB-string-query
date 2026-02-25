@@ -1,12 +1,12 @@
 import { parseReturn } from "#sql/utils";
 import { parseWhere } from "#sql/where";
-import { Opts } from "#types.js";
+import { Opts, ValtheraQuery } from "#types.js";
 import { JoinToRelationsEngine } from "#sql/utils/join.util";
 
 export function handleSelect(
     query: string,
     opts?: Opts,
-) {
+): ValtheraQuery {
     let whereClauseStr: string | undefined;
     let mainQueryPart = query;
 
@@ -31,16 +31,21 @@ export function handleSelect(
         const relationsEngine = new JoinToRelationsEngine(opts.defaultDbKey, opts.tableDbMap);
         const relations = relationsEngine.buildRelations(joinClauses, collection);
         const path = [opts.defaultDbKey, collection];
-        return parseReturn("relation-find", [path, whereClause, relations, findOpts]);
+
+        return {
+            method: "relation-find",
+            query: {},
+            relation: [path, whereClause, relations, findOpts]
+        }
     }
 
-    return parseReturn("find", [collection, whereClause, {}, findOpts]);
+    return parseReturn("find", collection, { search: whereClause, findOpts });
 }
 
 export function parseJoinClauses(joinPart: string): Record<string, string> {
     const joinClauses: Record<string, string> = {};
     const joinRegex = /\s+JOIN\s+([\w\/]+)(?:\s+AS\s+)?([\w\/]+)?\s+ON\s+([^\s]+)\s*=\s*([^\s]+)/gi;
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = joinRegex.exec(joinPart)) !== null) {
         const table = match[1];
         const alias = match[2] || table;

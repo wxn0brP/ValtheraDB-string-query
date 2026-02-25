@@ -9,5 +9,5 @@ export function handleUpdate(query: string) {
     const setClause = parseSet(match[2]);
     const whereClause = parseWhere(match[3]);
 
-    return parseReturn("update", [collection, whereClause, setClause]);
+    return parseReturn("update", collection, { search: whereClause, updater: setClause });
 }

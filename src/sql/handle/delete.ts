@@ -8,5 +8,5 @@ export function handleDelete(query: string) {
     const collection = match[1];
     const whereClause = match[2] ? parseWhere(match[2]) : {};
 
-    return parseReturn("remove", [collection, whereClause]);
+    return parseReturn("remove", collection, { search: whereClause });
 }

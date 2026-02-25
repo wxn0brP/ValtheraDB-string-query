@@ -51,5 +51,5 @@ export function handleInsert(query: string) {
         removeQuotes(k),
         parseNum(values[i])
     ]);
-    return parseReturn("add", [removeQuotes(collection), Object.fromEntries(data)]);
+    return parseReturn("add", removeQuotes(collection), { data: Object.fromEntries(data) });
 }

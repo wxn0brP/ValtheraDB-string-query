@@ -1,7 +1,9 @@
+import { VQuery } from "@wxn0brp/db-core/types/query";
 import { ValtheraQuery } from "../../types";
 
-export function parseReturn(method: string, args: any[]): ValtheraQuery {
-    return { method, args };
+export function parseReturn(method: string, collection: string = "", query: VQuery = {}): ValtheraQuery {
+    if (collection) query.collection = collection;
+    return { method, query };
 }
 
 export function parseSet(setString: string) {
