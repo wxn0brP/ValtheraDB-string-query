@@ -10,9 +10,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add"); // INSERT maps to "add" method
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ name: "John", email: "john@example.com" }); // data
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.data).toEqual({ name: "John", email: "john@example.com" }); // data
 	});
 
 	test("2. should parse INSERT with numeric values", () => {
@@ -21,9 +20,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("products"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ id: 1, name: "Laptop", price: 999.99 }); // data with numeric values
+		expect(parsedQuery.query.collection).toBe("products"); // collection name
+		expect(parsedQuery.query.data).toEqual({ id: 1, name: "Laptop", price: 999.99 }); // data with numeric values
 	});
 
 	test("3. should parse INSERT with mixed data types", () => {
@@ -32,9 +30,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ id: 1, name: "Jane", active: "true", score: 95.5 });
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.data).toEqual({ id: 1, name: "Jane", active: "true", score: 95.5 });
 	});
 
 	test("4. should handle INSERT with quoted values containing commas", () => {
@@ -43,9 +40,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("posts"); // collection name
-		expect(parsedQuery.args[1]).toEqual({
+		expect(parsedQuery.query.collection).toBe("posts"); // collection name
+		expect(parsedQuery.query.data).toEqual({
 			title: "Hello, World!",
 			content: "This is a post, with commas."
 		});
@@ -73,9 +69,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ name: "Jane", email: "jane@example.com" });
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.data).toEqual({ name: "Jane", email: "jane@example.com" });
 	});
 
 	test("8. should handle INSERT with mixed quote types", () => {
@@ -84,9 +79,8 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.data).toEqual({
 			name: "Jane",
 			email: "jane@example.com",
 			description: "User, with 'special' chars"
@@ -99,8 +93,7 @@ describe("SQL Parser - INSERT", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ name: "John (VIP)", price: 99.99 });
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.data).toEqual({ name: "John (VIP)", price: 99.99 });
 	});
 });

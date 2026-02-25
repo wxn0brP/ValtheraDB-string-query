@@ -10,9 +10,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove"); // DELETE maps to "remove" method
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
 	});
 
 	test("2. should parse DELETE query without WHERE clause", () => {
@@ -21,9 +20,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({}); // empty where clause
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.search).toEqual({}); // empty where clause
 	});
 
 	test("3. should parse DELETE with complex WHERE conditions", () => {
@@ -32,9 +30,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ $gt: { age: 65 }, status: "inactive" }); // where clause
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.search).toEqual({ $gt: { age: 65 }, status: "inactive" }); // where clause
 	});
 
 	test("4. should parse DELETE with string values", () => {
@@ -43,9 +40,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("posts"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ title: "Unwanted Post" }); // where clause
+		expect(parsedQuery.query.collection).toBe("posts"); // collection name
+		expect(parsedQuery.query.search).toEqual({ title: "Unwanted Post" }); // where clause
 	});
 
 	test("5. should parse DELETE with numeric values", () => {
@@ -54,9 +50,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("products"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ price: 0 }); // where clause
+		expect(parsedQuery.query.collection).toBe("products"); // collection name
+		expect(parsedQuery.query.search).toEqual({ price: 0 }); // where clause
 	});
 
 	test("6. should throw error for invalid DELETE syntax", () => {
@@ -73,9 +68,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("users"); // collection name
-		expect(parsedQuery.args[1]).toEqual({ name: "John Doe" }); // where clause
+		expect(parsedQuery.query.collection).toBe("users"); // collection name
+		expect(parsedQuery.query.search).toEqual({ name: "John Doe" }); // where clause
 	});
 
 	test("8. should handle DELETE with multiple condition types", () => {
@@ -84,9 +78,8 @@ describe("SQL Parser - DELETE", () => {
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
-		expect(parsedQuery.args).toHaveLength(2);
-		expect(parsedQuery.args[0]).toBe("orders"); // collection name
-		expect(parsedQuery.args[1]).toEqual({
+		expect(parsedQuery.query.collection).toBe("orders"); // collection name
+		expect(parsedQuery.query.search).toEqual({
 			$gt: { total: 1000 },
 			status: "cancelled",
 			$not: { user_id: 5 }

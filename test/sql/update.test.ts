@@ -10,10 +10,9 @@ describe("SQL Parser - UPDATE", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("update"); // UPDATE maps to "update" method
-        expect(parsedQuery.args).toHaveLength(3);
-        expect(parsedQuery.args[0]).toBe("users"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
-        expect(parsedQuery.args[2]).toEqual({ name: "John" }); // set clause
+        expect(parsedQuery.query.collection).toBe("users"); // collection name
+        expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
+        expect(parsedQuery.query.updater).toEqual({ name: "John" }); // set clause
     });
 
     test("2. should parse UPDATE with multiple SET fields", () => {
@@ -22,10 +21,9 @@ describe("SQL Parser - UPDATE", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("update");
-        expect(parsedQuery.args).toHaveLength(3);
-        expect(parsedQuery.args[0]).toBe("users"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ id: 2 }); // where clause
-        expect(parsedQuery.args[2]).toEqual({ name: "Jane", email: "jane@example.com" }); // set clause
+        expect(parsedQuery.query.collection).toBe("users"); // collection name
+        expect(parsedQuery.query.search).toEqual({ id: 2 }); // where clause
+        expect(parsedQuery.query.updater).toEqual({ name: "Jane", email: "jane@example.com" }); // set clause
     });
 
     test("3. should parse UPDATE with numeric values", () => {
@@ -34,10 +32,9 @@ describe("SQL Parser - UPDATE", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("update");
-        expect(parsedQuery.args).toHaveLength(3);
-        expect(parsedQuery.args[0]).toBe("products"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
-        expect(parsedQuery.args[2]).toEqual({ price: 29.99, stock: 100 }); // set clause
+        expect(parsedQuery.query.collection).toBe("products"); // collection name
+        expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
+        expect(parsedQuery.query.updater).toEqual({ price: 29.99, stock: 100 }); // set clause
     });
 
     test("4. should parse UPDATE with string values containing spaces", () => {
@@ -46,10 +43,9 @@ describe("SQL Parser - UPDATE", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("update");
-        expect(parsedQuery.args).toHaveLength(3);
-        expect(parsedQuery.args[0]).toBe("posts"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
-        expect(parsedQuery.args[2]).toEqual({
+        expect(parsedQuery.query.collection).toBe("posts"); // collection name
+        expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
+        expect(parsedQuery.query.updater).toEqual({
             title: "Hello World Post",
             content: "This is the content"
         }); // set clause
@@ -69,10 +65,9 @@ describe("SQL Parser - UPDATE", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("update");
-        expect(parsedQuery.args).toHaveLength(3);
-        expect(parsedQuery.args[0]).toBe("users"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ $gt: { age: 65 }, active: 1 }); // where clause
-        expect(parsedQuery.args[2]).toEqual({ status: "inactive" }); // set clause
+        expect(parsedQuery.query.collection).toBe("users"); // collection name
+        expect(parsedQuery.query.search).toEqual({ $gt: { age: 65 }, active: 1 }); // where clause
+        expect(parsedQuery.query.updater).toEqual({ status: "inactive" }); // set clause
     });
 
     test("7. should throw error when there is no WHERE clause", () => {

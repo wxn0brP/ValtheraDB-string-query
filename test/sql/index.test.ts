@@ -10,8 +10,7 @@ describe("SQL Parser - SELECT", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("find");
-        expect(parsedQuery.args).toHaveLength(4);
-        expect(parsedQuery.args[0]).toBe("users"); // collection name
-        expect(parsedQuery.args[1]).toEqual({ id: 1 }); // where clause
+        expect(parsedQuery.query.collection).toBe("users"); // collection name
+        expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
     });
 });
