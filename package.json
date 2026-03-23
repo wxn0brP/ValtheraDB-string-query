@@ -19,7 +19,7 @@
         "@types/node": "*",
         "@wxn0brp/db-core": "~0.10.0",
         "tsc-alias": "*",
-        "typescript": "^5"
+        "typescript": "^6.0.0"
     },
     "peerDependencies": {
         "@wxn0brp/db-core": "~0.10.0"
