@@ -16,13 +16,12 @@
     },
     "devDependencies": {
         "@types/bun": "*",
-        "@types/node": "*",
-        "@wxn0brp/db-core": "~0.10.0",
-        "tsc-alias": "*",
-        "typescript": "*"
+        "@wxn0brp/db-core": "^0.11.0",
+        "tsc-alias": "^1",
+        "typescript": "^6"
     },
     "peerDependencies": {
-        "@wxn0brp/db-core": "~0.10.0"
+        "@wxn0brp/db-core": "^0.11.0"
     },
     "peerDependenciesMeta": {
         "@wxn0brp/db-core": {
