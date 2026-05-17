@@ -12,7 +12,12 @@
         "skipLibCheck": true,
         "outDir": "./dist",
         "sourceMap": true,
-        "declaration": true
+        "declaration": true,
+        "strict": false,
+        "rootDir": "./src",
+        "typeRoots": [
+            "bun-types"
+        ]
     },
     "include": [
         "./src"
