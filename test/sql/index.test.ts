@@ -13,4 +13,8 @@ describe("SQL Parser - SELECT", () => {
         expect(parsedQuery.query.collection).toBe("users"); // collection name
         expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
     });
+
+    test("2. should suggest command for misspelled SQL method", () => {
+        expect(() => sqlParser.parse("SELCECT * FROM users")).toThrow("Unknown SQL command 'SELCECT'. Did you mean 'SELECT'?");
+    });
 });

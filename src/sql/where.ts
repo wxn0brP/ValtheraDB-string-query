@@ -10,6 +10,7 @@ const operators: Record<string, string> = {
     "<=": "$lte",
     ">=": "$gte",
     "!=": "$not",
+    "<>": "$not",
     "IN": "$in",
     "NOT IN": "$nin",
     "NOT ANY": "$nin",
@@ -134,7 +135,10 @@ export function parseWhere(where: string): QueryObject {
                 const upperOp = opToken.toUpperCase();
                 const nextToken = tokens[i + 1]?.trim().toUpperCase();
 
-                if (upperOp === "NOT" && (nextToken === "IN" || nextToken === "LIKE" || nextToken === "ILIKE" || nextToken === "ANY" || nextToken === "BETWEEN")) {
+                if (
+                    upperOp === "NOT" &&
+                    (["IN", "LIKE", "ILIKE", "ANY", "BETWEEN"].includes(nextToken))
+                ) {
                     opToken = `NOT ${nextToken}`;
                     i++;
                 } else if (upperOp === "IS") {
@@ -152,7 +156,11 @@ export function parseWhere(where: string): QueryObject {
             let value: any = tokens[++i]?.trim();
 
             if (!key || !opToken || value === undefined) {
-                throw new Error(`Invalid condition near '${key} ${opToken} ${value}'`);
+                throw new Error(formatConditionError(key, opToken, value));
+            }
+
+            if (isOperatorToken(value)) {
+                throw new Error(`Invalid value for WHERE key '${key}' near '${key} ${opToken} ${value}'`);
             }
 
             // Handle quoted values
@@ -261,10 +269,18 @@ export function parseWhere(where: string): QueryObject {
                     (current[mappedOp] as Record<string, any>)[key] = value;
                 }
             } else {
-                // If operator not found, default to direct assignment
-                current[key] = value;
+                throw new Error(`Unsupported WHERE operator '${opToken}' for key '${key}'`);
             }
         }
+    }
+
+    if (frames.length > 0) {
+        throw new Error("Unmatched opening parenthesis in WHERE clause");
+    }
+
+    const lastToken = tokens[tokens.length - 1]?.toUpperCase();
+    if (lastToken === "AND" || lastToken === "OR") {
+        throw new Error(`Dangling WHERE operator '${lastToken}'`);
     }
 
     // Combine any remaining OR conditions
@@ -274,4 +290,18 @@ export function parseWhere(where: string): QueryObject {
     }
 
     return current;
+}
+
+function isOperatorToken(value: any) {
+    return typeof value === "string" && /^(=|!=|<>|<|>|<=|>=)$/i.test(value);
+}
+
+function formatConditionError(key?: string, opToken?: string, value?: any) {
+    const parts = [key, opToken, value].filter(v => v !== undefined && v !== "").join(" ");
+
+    if (!key) return "Invalid WHERE condition: missing key";
+    if (!opToken) return `Invalid WHERE condition for key '${key}': missing operator`;
+    if (value === undefined) return `Invalid WHERE condition for key '${key}': missing value near '${parts}'`;
+
+    return `Invalid WHERE condition near '${parts}'`;
 }

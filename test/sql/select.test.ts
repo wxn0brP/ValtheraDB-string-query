@@ -82,7 +82,7 @@ describe("SQL Parser - SELECT", () => {
 
         expect(parsedQuery).toBeDefined();
         expect(parsedQuery.method).toBe("relation-find");
-        expect(parsedQuery.relation).toHaveLength(4);
+        expect(parsedQuery.relation).toHaveLength(5);
         expect(parsedQuery.query).toEqual({});
         expect(parsedQuery.relation[0]).toEqual(["db", "posts"]); // path
         expect(parsedQuery.relation[1]).toEqual({ id: 1 }); // where clause
@@ -96,6 +96,7 @@ describe("SQL Parser - SELECT", () => {
             }
         }); // relations
         expect(parsedQuery.relation[3]).toEqual({ select: ["posts.*", "users.name"] }); // select options
+        expect(parsedQuery.relation[4]).toEqual({}); // db find options
     });
 
     test("7. should throw error for invalid SELECT syntax", () => {
@@ -158,5 +159,201 @@ describe("SQL Parser - SELECT", () => {
         const query = "SELECT * FROM users WHERE age NOT BETWEEN 18 AND 30";
         const parsedQuery = sqlParser.parse(query);
         expect(parsedQuery.query.search).toEqual({ $not: { $between: { age: [18, 30] } } });
+    });
+
+    test("13. should parse ORDER BY with default ascending sort", () => {
+        const query = "SELECT * FROM users ORDER BY name";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.search).toEqual({});
+        expect(parsedQuery.query.dbFindOpts).toEqual({ sortBy: "name", sortAsc: true });
+    });
+
+    test("13b. should parse ORDER BY DESC", () => {
+        const query = "SELECT * FROM users ORDER BY age DESC";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({ sortBy: "age", sortAsc: false });
+    });
+
+    test("14. should parse LIMIT", () => {
+        const query = "SELECT * FROM users LIMIT 10";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({ limit: 10 });
+    });
+
+    test("15. should parse OFFSET", () => {
+        const query = "SELECT * FROM users OFFSET 20";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({ offset: 20 });
+    });
+
+    test("16. should parse WHERE with ORDER BY, LIMIT and OFFSET", () => {
+        const query = "SELECT * FROM users WHERE active = 1 ORDER BY name DESC LIMIT 10 OFFSET 20";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.search).toEqual({ active: 1 });
+        expect(parsedQuery.query.dbFindOpts).toEqual({
+            sortBy: "name",
+            sortAsc: false,
+            limit: 10,
+            offset: 20,
+        });
+    });
+
+    test("17. should keep projection separate from dbFindOpts", () => {
+        const query = "SELECT name FROM users ORDER BY name LIMIT 5";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.findOpts).toEqual({ select: ["name"] });
+        expect(parsedQuery.query.dbFindOpts).toEqual({ sortBy: "name", sortAsc: true, limit: 5 });
+    });
+
+    test("18. should pass dbFindOpts to relation-find", () => {
+        const query = "SELECT posts.*, users.name FROM posts JOIN users ON posts.userId = users.id WHERE posts.id = 1 ORDER BY posts.createdAt DESC LIMIT 5 OFFSET 10";
+        const parsedQuery = sqlParser.parse(query, { defaultDbKey: "db" });
+
+        expect(parsedQuery.method).toBe("relation-find");
+        expect(parsedQuery.relation?.[4]).toEqual({
+            sortBy: "posts.createdAt",
+            sortAsc: false,
+            limit: 5,
+            offset: 10,
+        });
+    });
+
+    test("18b. should not treat limit or offset fields in WHERE as clauses", () => {
+        const query = "SELECT * FROM users WHERE limit = 1 AND offset = 2 LIMIT 5 OFFSET 10";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.search).toEqual({ limit: 1, offset: 2 });
+        expect(parsedQuery.query.dbFindOpts).toEqual({ limit: 5, offset: 10 });
+    });
+
+    test("19. should throw for invalid LIMIT", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users LIMIT abc")).toThrow("Invalid LIMIT value");
+        expect(() => sqlParser.parse("SELECT * FROM users LIMIT -1")).toThrow("Invalid LIMIT value");
+    });
+
+    test("20. should throw for invalid OFFSET", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users OFFSET abc")).toThrow("Invalid OFFSET value");
+    });
+
+    test("21. should throw for invalid ORDER BY", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users ORDER BY")).toThrow("Invalid ORDER BY syntax");
+    });
+
+    test("22. should parse ORDER BY random()", () => {
+        const query = "SELECT * FROM users ORDER BY random()";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({ sortBy: "random()" });
+    });
+
+    test("23. should parse REVERSE", () => {
+        const query = "SELECT * FROM users REVERSE LIMIT 5";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({ reverse: true, limit: 5 });
+    });
+
+    test("24. should parse aggregate select functions", () => {
+        const query = "SELECT MIN(age) AS minAge, MAX(age) AS maxAge, AVG(score) AS avgScore, COUNT(email) AS emailCount FROM users";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.findOpts).toEqual({});
+        expect(parsedQuery.query.dbFindOpts).toEqual({
+            min: { minAge: "age" },
+            max: { maxAge: "age" },
+            avg: { avgScore: "score" },
+            count: { emailCount: "email" },
+        });
+    });
+
+    test("25. should parse aggregate select functions without aliases", () => {
+        const query = "SELECT MIN(age), MAX(user.score), AVG(profile.rating), COUNT(email) FROM users";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({
+            min: { min_age: "age" },
+            max: { max_user_score: "user.score" },
+            avg: { avg_profile_rating: "profile.rating" },
+            count: { count_email: "email" },
+        });
+    });
+
+    test("26. should parse GROUP BY", () => {
+        const query = "SELECT COUNT(email) AS usersCount FROM users GROUP BY city";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.dbFindOpts).toEqual({
+            count: { usersCount: "email" },
+            groupBy: "city",
+        });
+    });
+
+    test("27. should parse multiple GROUP BY fields with ORDER BY, LIMIT and OFFSET", () => {
+        const query = "SELECT COUNT(email) AS usersCount, AVG(age) AS avgAge FROM users WHERE active = 1 GROUP BY city, status ORDER BY avgAge DESC LIMIT 10 OFFSET 20";
+        const parsedQuery = sqlParser.parse(query);
+
+        expect(parsedQuery.query.search).toEqual({ active: 1 });
+        expect(parsedQuery.query.dbFindOpts).toEqual({
+            count: { usersCount: "email" },
+            avg: { avgAge: "age" },
+            groupBy: ["city", "status"],
+            sortBy: "avgAge",
+            sortAsc: false,
+            limit: 10,
+            offset: 20,
+        });
+    });
+
+    test("28. should pass aggregate dbFindOpts to relation-find", () => {
+        const query = "SELECT COUNT(posts.id) AS postsCount FROM posts JOIN users ON posts.userId = users.id GROUP BY posts.userId ORDER BY postsCount DESC LIMIT 10";
+        const parsedQuery = sqlParser.parse(query, { defaultDbKey: "db" });
+
+        expect(parsedQuery.method).toBe("relation-find");
+        expect(parsedQuery.relation?.[3]).toEqual({});
+        expect(parsedQuery.relation?.[4]).toEqual({
+            count: { postsCount: "posts.id" },
+            groupBy: "posts.userId",
+            sortBy: "postsCount",
+            sortAsc: false,
+            limit: 10,
+        });
+    });
+
+    test("29. should throw for invalid GROUP BY", () => {
+        expect(() => sqlParser.parse("SELECT COUNT(id) FROM users GROUP BY")).toThrow("Invalid GROUP BY syntax");
+    });
+
+    test("30. should explain missing SELECT list", () => {
+        expect(() => sqlParser.parse("SELECT FROM users")).toThrow("Invalid SELECT syntax: missing select list before FROM");
+    });
+
+    test("31. should explain WHERE key with missing value", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users WHERE name =")).toThrow("Invalid WHERE condition for key 'name': missing value");
+    });
+
+    test("32. should explain unsupported WHERE operator for key", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users WHERE name CONTAINS 'John'")).toThrow("Unsupported WHERE operator 'CONTAINS' for key 'name'");
+    });
+
+    test("33. should explain invalid WHERE value for key", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users WHERE name === 'John'")).toThrow("Invalid value for WHERE key 'name'");
+    });
+
+    test("34. should explain dangling WHERE operator", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users WHERE active = 1 AND")).toThrow("Dangling WHERE operator 'AND'");
+    });
+
+    test("35. should explain unmatched opening parenthesis in WHERE", () => {
+        expect(() => sqlParser.parse("SELECT * FROM users WHERE (active = 1")).toThrow("Unmatched opening parenthesis in WHERE clause");
+    });
+
+    test("36. should explain invalid aggregate expression", () => {
+        expect(() => sqlParser.parse("SELECT COUNT() FROM users")).toThrow("Invalid aggregate expression 'COUNT()'");
     });
 });
