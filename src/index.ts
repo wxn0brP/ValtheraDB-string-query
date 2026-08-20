@@ -1,7 +1,7 @@
 import valtheraSQLParser from "./sql";
 
 export const ValtheraDbParsers = {
-    sql: valtheraSQLParser
+	sql: valtheraSQLParser,
 };
 
 export const ValtheraDbRelations = {};
