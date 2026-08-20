@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.120.0](https://github.com/wxn0brP/ValtheraDB-string-query/compare/v0.110.0...v0.120.0) (2026-08-20)
+
+
+### Features
+
+* support new dbFindOpts & enhance errors ([c93e87c](https://github.com/wxn0brP/ValtheraDB-string-query/commit/c93e87cd90f04edaae0cec96a2d6959f075c8cb4))
+
 ## [0.110.0](https://github.com/wxn0brP/ValtheraDB-string-query/compare/v0.100.0...v0.110.0) (2026-05-17)
 
 ## [0.100.0](https://github.com/wxn0brP/ValtheraDB-string-query/compare/v0.90.0...v0.100.0) (2026-03-20)
