@@ -25,6 +25,18 @@ export function handleSelect(query: string, opts?: Opts): ValtheraQuery {
 	const joinPart = match[3] || "";
 	const whereClause = whereClauseStr ? parseWhere(whereClauseStr) : {};
 
+	if (isCountStarSelect(columnsPart)) {
+		assertCountStarAllowed({
+			groupClauseStr,
+			joinPart,
+			dbFindOpts,
+		});
+		return parseReturn("count", collection, {
+			search: whereClause,
+		});
+	}
+	assertNoCountStar(columnsPart);
+
 	const findOpts = parseSelectClause(columnsPart);
 	Object.assign(dbFindOpts, parseAggregateSelectClause(columnsPart));
 	if (groupClauseStr !== undefined) {
@@ -330,6 +342,42 @@ function parseAggregateSelectClause(selectClause: string): DbFindOpts {
 	}
 
 	return dbFindOpts;
+}
+
+function isCountStarSelect(selectClause: string) {
+	return /^COUNT\(\s*\*\s*\)$/i.test(selectClause);
+}
+
+function assertCountStarAllowed({
+	groupClauseStr,
+	joinPart,
+	dbFindOpts,
+}: {
+	groupClauseStr?: string;
+	joinPart: string;
+	dbFindOpts: DbFindOpts;
+}) {
+	if (groupClauseStr !== undefined)
+		throw new Error("COUNT(*) does not support GROUP BY");
+	if (joinPart) throw new Error("COUNT(*) does not support JOIN");
+
+	const clauseNames: Record<string, string> = {
+		limit: "LIMIT",
+		offset: "OFFSET",
+		reverse: "REVERSE",
+		sortBy: "ORDER BY",
+	};
+	for (const [clause, name] of Object.entries(clauseNames)) {
+		if (dbFindOpts[clause as keyof DbFindOpts] !== undefined)
+			throw new Error(`COUNT(*) does not support ${name}`);
+	}
+}
+
+function assertNoCountStar(selectClause: string) {
+	for (const part of splitSelectParts(selectClause)) {
+		if (/^COUNT\(\s*\*\s*\)$/i.test(part))
+			throw new Error("COUNT(*) must be used alone, not with other columns");
+	}
 }
 
 function parseGroupClause(groupClause: string) {

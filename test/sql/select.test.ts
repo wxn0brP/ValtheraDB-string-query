@@ -547,4 +547,82 @@ describe("SQL Parser - SELECT", () => {
 			"Invalid aggregate expression 'COUNT()'",
 		);
 	});
+
+	test("37. should parse SELECT COUNT(*) as count", () => {
+		const query = "SELECT COUNT(*) FROM users";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("count");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({});
+	});
+
+	test("38. should parse SELECT COUNT(*) with WHERE as count", () => {
+		const query = "SELECT COUNT(*) FROM users WHERE active = 1 AND age > 30";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("count");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			active: 1,
+			$gt: {
+				age: 30,
+			},
+		});
+	});
+
+	test("39. should parse SELECT count( * ) with spaces", () => {
+		const query = "SELECT count( * ) FROM users";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("count");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({});
+	});
+
+	test("40. should throw for COUNT(*) with GROUP BY", () => {
+		expect(() =>
+			sqlParser.parse("SELECT COUNT(*) FROM users GROUP BY city"),
+		).toThrow("COUNT(*) does not support GROUP BY");
+	});
+
+	test("41. should throw for COUNT(*) mixed with other columns", () => {
+		expect(() => sqlParser.parse("SELECT COUNT(*), name FROM users")).toThrow(
+			"COUNT(*) must be used alone, not with other columns",
+		);
+	});
+
+	test("42. should throw for COUNT(*) with JOIN", () => {
+		expect(() =>
+			sqlParser.parse(
+				"SELECT COUNT(*) FROM posts JOIN users ON posts.userId = users.id",
+			),
+		).toThrow("COUNT(*) does not support JOIN");
+	});
+
+	test("43. should throw for COUNT(*) with LIMIT", () => {
+		expect(() => sqlParser.parse("SELECT COUNT(*) FROM users LIMIT 5")).toThrow(
+			"COUNT(*) does not support LIMIT",
+		);
+	});
+
+	test("44. should throw for COUNT(*) with ORDER BY", () => {
+		expect(() =>
+			sqlParser.parse("SELECT COUNT(*) FROM users ORDER BY name"),
+		).toThrow("COUNT(*) does not support ORDER BY");
+	});
+
+	test("45. should keep find for LIMIT 1 (SQL returns a set)", () => {
+		const query = "SELECT * FROM users WHERE id = 1 LIMIT 1";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("find");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			id: 1,
+		});
+		expect(parsedQuery.query.dbFindOpts).toEqual({
+			limit: 1,
+		});
+	});
 });

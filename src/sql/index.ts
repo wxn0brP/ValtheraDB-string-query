@@ -1,7 +1,9 @@
 import { Opts, ValtheraParser } from "../types";
 import {
 	handleCreate,
+	handleCreateIndex,
 	handleDrop,
+	handleDropIndex,
 	handleExists,
 	handleGet,
 } from "./handle/collection";
@@ -41,8 +43,11 @@ class SQLParser implements ValtheraParser {
 		else if (method === "GET") {
 			return handleGet(query);
 		} else if (method === "CREATE") {
+			if (/^CREATE\s+(?:UNIQUE\s+)?INDEX\b/i.test(query))
+				return handleCreateIndex(query);
 			return handleCreate(query);
 		} else if (method === "DROP") {
+			if (/^DROP\s+INDEX\b/i.test(query)) return handleDropIndex(query);
 			return handleDrop(query);
 		} else if (method === "EXISTS") {
 			return handleExists(query);

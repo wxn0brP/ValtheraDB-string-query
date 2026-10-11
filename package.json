@@ -17,12 +17,12 @@
     "devDependencies": {
         "@types/bun": "*",
         "@wxn0brp/biome": "*",
-        "@wxn0brp/db-core": "^0.12.0",
+        "@wxn0brp/db-core": "^0.12.8",
         "tsc-alias": "^1",
         "typescript": "^7"
     },
     "peerDependencies": {
-        "@wxn0brp/db-core": "^0.12.0"
+        "@wxn0brp/db-core": "^0.12.8"
     },
     "peerDependenciesMeta": {
         "@wxn0brp/db-core": {

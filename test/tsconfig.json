@@ -10,10 +10,14 @@
 		},
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"outDir": "./dist",
-		"declaration": true
+		"strict": false,
+		"rootDir": "..",
+		"types": [
+			"bun-types"
+		]
 	},
 	"include": [
-		"."
+		".",
+		"../src"
 	]
 }

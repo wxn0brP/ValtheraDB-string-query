@@ -119,4 +119,75 @@ describe("SQL Parser - INSERT", () => {
 			price: 99.99,
 		});
 	});
+
+	test("10. should parse multi-row INSERT as bulkAdd", () => {
+		const query =
+			"INSERT INTO users (name, age) VALUES ('A', 1), ('B', 2), ('C', 3)";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery).toBeDefined();
+		expect(parsedQuery.method).toBe("bulkAdd");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.datas).toEqual([
+			{
+				name: "A",
+				age: 1,
+			},
+			{
+				name: "B",
+				age: 2,
+			},
+			{
+				name: "C",
+				age: 3,
+			},
+		]);
+	});
+
+	test("11. should parse INSERT ... ON DUPLICATE KEY UPDATE as updateOneOrAdd", () => {
+		const query =
+			"INSERT INTO users (name, age) VALUES ('A', 1) ON DUPLICATE KEY UPDATE age = 2";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery).toBeDefined();
+		expect(parsedQuery.method).toBe("updateOneOrAdd");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			name: "A",
+			age: 1,
+		});
+		expect(parsedQuery.query.updater).toEqual({
+			age: 2,
+		});
+		expect(parsedQuery.query.add_arg).toEqual({
+			name: "A",
+			age: 1,
+		});
+	});
+
+	test("12. should parse INSERT ... ON DUPLICATE KEY DELETE as toggleOne", () => {
+		const query =
+			"INSERT INTO users (name, age) VALUES ('A', 1) ON DUPLICATE KEY DELETE";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery).toBeDefined();
+		expect(parsedQuery.method).toBe("toggleOne");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			name: "A",
+			age: 1,
+		});
+		expect(parsedQuery.query.data).toEqual({
+			name: "A",
+			age: 1,
+		});
+	});
+
+	test("13. should throw for multi-row INSERT with ON DUPLICATE KEY", () => {
+		expect(() =>
+			sqlParser.parse(
+				"INSERT INTO users (a, b) VALUES (1, 2), (3, 4) ON DUPLICATE KEY UPDATE a = 1",
+			),
+		).toThrow("ON DUPLICATE KEY requires exactly one row");
+	});
 });
