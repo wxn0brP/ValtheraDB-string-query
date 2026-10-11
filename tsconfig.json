@@ -1,32 +1,32 @@
 {
-    "compilerOptions": {
-        "module": "ES2022",
-        "target": "ES2022",
-        "moduleResolution": "bundler",
-        "paths": {
-            "#*": [
-                "./src/*"
-            ]
-        },
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "outDir": "./dist",
-        "sourceMap": true,
-        "declaration": true,
-        "strict": false,
-        "rootDir": "./src",
-        "typeRoots": [
-            "bun-types"
-        ]
-    },
-    "include": [
-        "./src"
-    ],
-    "exclude": [
-        "node_modules"
-    ],
-    "tsc-alias": {
-        "resolveFullPaths": true,
-        "verbose": false
-    }
+	"compilerOptions": {
+		"module": "ES2022",
+		"target": "ES2022",
+		"moduleResolution": "bundler",
+		"paths": {
+			"#*": [
+				"./src/*"
+			]
+		},
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"outDir": "./dist",
+		"sourceMap": true,
+		"declaration": true,
+		"strict": false,
+		"rootDir": "./src",
+		"typeRoots": [
+			"bun-types"
+		]
+	},
+	"include": [
+		"./src"
+	],
+	"exclude": [
+		"node_modules"
+	],
+	"tsc-alias": {
+		"resolveFullPaths": true,
+		"verbose": false
+	}
 }

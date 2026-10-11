@@ -5,33 +5,48 @@ const sqlParser = new SQLParser();
 
 describe("SQL Parser - INSERT", () => {
 	test("1. should parse a simple INSERT query", () => {
-		const query = "INSERT INTO users (name, email) VALUES ('John', 'john@example.com')";
+		const query =
+			"INSERT INTO users (name, email) VALUES ('John', 'john@example.com')";
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add"); // INSERT maps to "add" method
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.data).toEqual({ name: "John", email: "john@example.com" }); // data
+		expect(parsedQuery.query.data).toEqual({
+			name: "John",
+			email: "john@example.com",
+		}); // data
 	});
 
 	test("2. should parse INSERT with numeric values", () => {
-		const query = "INSERT INTO products (id, name, price) VALUES (1, 'Laptop', 999.99)";
+		const query =
+			"INSERT INTO products (id, name, price) VALUES (1, 'Laptop', 999.99)";
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
 		expect(parsedQuery.query.collection).toBe("products"); // collection name
-		expect(parsedQuery.query.data).toEqual({ id: 1, name: "Laptop", price: 999.99 }); // data with numeric values
+		expect(parsedQuery.query.data).toEqual({
+			id: 1,
+			name: "Laptop",
+			price: 999.99,
+		}); // data with numeric values
 	});
 
 	test("3. should parse INSERT with mixed data types", () => {
-		const query = "INSERT INTO users (id, name, active, score) VALUES (1, 'Jane', true, 95.5)";
+		const query =
+			"INSERT INTO users (id, name, active, score) VALUES (1, 'Jane', true, 95.5)";
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.data).toEqual({ id: 1, name: "Jane", active: "true", score: 95.5 });
+		expect(parsedQuery.query.data).toEqual({
+			id: 1,
+			name: "Jane",
+			active: "true",
+			score: 95.5,
+		});
 	});
 
 	test("4. should handle INSERT with quoted values containing commas", () => {
@@ -43,7 +58,7 @@ describe("SQL Parser - INSERT", () => {
 		expect(parsedQuery.query.collection).toBe("posts"); // collection name
 		expect(parsedQuery.query.data).toEqual({
 			title: "Hello, World!",
-			content: "This is a post, with commas."
+			content: "This is a post, with commas.",
 		});
 	});
 
@@ -64,13 +79,17 @@ describe("SQL Parser - INSERT", () => {
 	});
 
 	test("7. should handle INSERT with double quotes", () => {
-		const query = 'INSERT INTO users (name, email) VALUES ("Jane", "jane@example.com")';
+		const query =
+			'INSERT INTO users (name, email) VALUES ("Jane", "jane@example.com")';
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.data).toEqual({ name: "Jane", email: "jane@example.com" });
+		expect(parsedQuery.query.data).toEqual({
+			name: "Jane",
+			email: "jane@example.com",
+		});
 	});
 
 	test("8. should handle INSERT with mixed quote types", () => {
@@ -83,17 +102,21 @@ describe("SQL Parser - INSERT", () => {
 		expect(parsedQuery.query.data).toEqual({
 			name: "Jane",
 			email: "jane@example.com",
-			description: "User, with 'special' chars"
+			description: "User, with 'special' chars",
 		});
 	});
 
 	test("9. should handle INSERT with () in values", () => {
-		const query = "INSERT INTO users (name, price) VALUES ('John (VIP)', 99.99)";
+		const query =
+			"INSERT INTO users (name, price) VALUES ('John (VIP)', 99.99)";
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("add");
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.data).toEqual({ name: "John (VIP)", price: 99.99 });
+		expect(parsedQuery.query.data).toEqual({
+			name: "John (VIP)",
+			price: 99.99,
+		});
 	});
 });

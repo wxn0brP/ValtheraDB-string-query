@@ -11,7 +11,9 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove"); // DELETE maps to "remove" method
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.search).toEqual({ id: 1 }); // where clause
+		expect(parsedQuery.query.search).toEqual({
+			id: 1,
+		}); // where clause
 	});
 
 	test("2. should parse DELETE query without WHERE clause", () => {
@@ -31,7 +33,12 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.search).toEqual({ $gt: { age: 65 }, status: "inactive" }); // where clause
+		expect(parsedQuery.query.search).toEqual({
+			$gt: {
+				age: 65,
+			},
+			status: "inactive",
+		}); // where clause
 	});
 
 	test("4. should parse DELETE with string values", () => {
@@ -41,7 +48,9 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
 		expect(parsedQuery.query.collection).toBe("posts"); // collection name
-		expect(parsedQuery.query.search).toEqual({ title: "Unwanted Post" }); // where clause
+		expect(parsedQuery.query.search).toEqual({
+			title: "Unwanted Post",
+		}); // where clause
 	});
 
 	test("5. should parse DELETE with numeric values", () => {
@@ -51,7 +60,9 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
 		expect(parsedQuery.query.collection).toBe("products"); // collection name
-		expect(parsedQuery.query.search).toEqual({ price: 0 }); // where clause
+		expect(parsedQuery.query.search).toEqual({
+			price: 0,
+		}); // where clause
 	});
 
 	test("6. should throw error for invalid DELETE syntax", () => {
@@ -69,20 +80,27 @@ describe("SQL Parser - DELETE", () => {
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
 		expect(parsedQuery.query.collection).toBe("users"); // collection name
-		expect(parsedQuery.query.search).toEqual({ name: "John Doe" }); // where clause
+		expect(parsedQuery.query.search).toEqual({
+			name: "John Doe",
+		}); // where clause
 	});
 
 	test("8. should handle DELETE with multiple condition types", () => {
-		const query = "DELETE FROM orders WHERE total > 1000 AND status = 'cancelled' AND user_id != 5";
+		const query =
+			"DELETE FROM orders WHERE total > 1000 AND status = 'cancelled' AND user_id != 5";
 		const parsedQuery = sqlParser.parse(query);
 
 		expect(parsedQuery).toBeDefined();
 		expect(parsedQuery.method).toBe("remove");
 		expect(parsedQuery.query.collection).toBe("orders"); // collection name
 		expect(parsedQuery.query.search).toEqual({
-			$gt: { total: 1000 },
+			$gt: {
+				total: 1000,
+			},
 			status: "cancelled",
-			$not: { user_id: 5 }
+			$not: {
+				user_id: 5,
+			},
 		}); // where clause with multiple operators
 	});
 });
