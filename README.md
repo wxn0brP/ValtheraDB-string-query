@@ -1,12 +1,7 @@
 # ValtheraDB Query Processor
 
-`@wxn0brp/db-string-query` is a powerful query processor for ValtheraDB. It allows you to parse database queries written in either a JavaScript-like syntax or a SQL-like syntax. This provides flexibility in how you interact with your database.
-
-## Features
-
--   **Dual Syntax Support**: Write queries in either JS-like or SQL-like syntax.
--   **Extensible**: Easily extendable with new methods and handlers.
--   **Typed**: Written in TypeScript for type safety.
+`@wxn0brp/db-string-query` parses SQL-like strings into ValtheraDB commands. It
+covers a practical subset of SQL, not full SQL.
 
 ## Installation
 
@@ -14,64 +9,133 @@
 npm install @wxn0brp/db-string-query
 ```
 
+`@wxn0brp/db-core` is an optional peer dependency that provides the query types.
+
 ## Usage
-
-The library exports a `ValtheraDbParsers` object which contains the `js` and `sql` parsers.
-
-### JS-like Syntax
-
-The JS-like syntax is similar to calling a function. The query string should be in the format `method(arg1, arg2, ...)`. Arguments are parsed using `JSON5`, so you can pass complex objects.
-
-```typescript
-import { ValtheraDbParsers } from "@wxn0brp/db-string-query";
-
-const jsParser = new ValtheraDbParsers.js();
-
-const query = `myMethod({ a: 1, b: "hello" }, [1, 2, 3])`;
-const parsedQuery = jsParser.parse(query);
-
-console.log(parsedQuery);
-// Output:
-// {
-//   method: 'myMethod',
-//   args: [ { a: 1, b: 'hello' }, [ 1, 2, 3 ] ]
-// }
-```
-
-### SQL-like Syntax
-
-The SQL-like syntax provides a familiar way to interact with the database. 
-
-> Note: The SQL-like syntax is not full SQL. It is a simplified subset, supporting only basic, straightforward cases.
 
 ```typescript
 import { ValtheraDbParsers } from "@wxn0brp/db-string-query";
 
 const sqlParser = new ValtheraDbParsers.sql();
 
-const query = "SELECT * FROM users WHERE id = 1";
-const parsedQuery = sqlParser.parse(query);
-
-console.log(parsedQuery);
+const parsedQuery = sqlParser.parse("SELECT * FROM users WHERE id = 1");
+// {
+//   method: 'find',
+//   query: { collection: 'users', search: { id: 1 }, findOpts: {}, dbFindOpts: {} }
+// }
 ```
 
-#### Supported SQL Commands
+`parse(query, opts?)` returns `{ method, query, relation? }`. `method` names the
+ValtheraDB method and `query` is its argument, for example
+`db.find(parsedQuery.query)`.
 
-The SQL parser supports the following commands:
+## Commands
 
--   `SELECT`: Retrieve data from a collection.
--   `INSERT`: Add new data to a collection.
--   `UPDATE`: Modify existing data in a collection.
--   `DELETE`: Remove data from a collection.
--   `GET COLLECTIONS`: Get list of collection.
--   `CREATE`: Create a new collection.
--   `DROP`: Delete a collection.
--   `EXISTS`: Check if a collection exists.
+| SQL command                  | ValtheraDB method                    |
+| ---------------------------- | ------------------------------------ |
+| `SELECT`                     | `find` (`count` for `COUNT(*)`)      |
+| `SELECT ... JOIN`            | `relation-find`                      |
+| `INSERT`                     | `add` / `bulkAdd`                    |
+| `INSERT ... ON DUPLICATE KEY` | `updateOneOrAdd` / `toggleOne`      |
+| `UPDATE`                     | `update`                             |
+| `DELETE`                     | `remove`                             |
+| `GET COLLECTIONS`            | `getCollections`                     |
+| `CREATE TABLE`               | `ensureCollection`                   |
+| `DROP TABLE`                 | `removeCollection`                   |
+| `EXISTS TABLE`               | `issetCollection`                    |
+| `CREATE INDEX`               | `createIndex`                        |
+| `DROP INDEX`                 | `removeIndex`                        |
 
-## Contributing
+`TABLE` and `COLLECTION` are synonyms, as are `IF NOT EXISTS` and `IF EXISTS`.
+A trailing `;` is stripped.
 
-Contributions are welcome! Please open an issue or submit a pull request.
+## SELECT
+
+```sql
+SELECT name, email FROM users WHERE active = 1 ORDER BY name DESC LIMIT 10 OFFSET 20
+```
+
+-   Projection: `*`, a column list, or `* EXCLUDE a, b`.
+-   WHERE: `=`, `<`, `>`, `<=`, `>=`, `!=`/`<>`, `IN`/`NOT IN`/`NOT ANY`,
+    `IS [NOT] NULL`, `LIKE`/`ILIKE` (with `%` and `_`), `BETWEEN`, plus `AND`,
+    `OR` and parentheses.
+-   `ORDER BY field [ASC|DESC]` or `ORDER BY random()`, `GROUP BY field[, ...]`,
+    `LIMIT n`, `OFFSET n`, `REVERSE`.
+-   Aggregates `MIN`, `MAX`, `AVG`, `COUNT` with an optional `AS alias`. Without
+    one the parser derives the alias (`min_age`, ...).
+-   `COUNT(*)` must be used alone and maps to the `count` method.
+
+Projection goes to `query.findOpts`; sorting, paging, grouping and aggregates go
+to `query.dbFindOpts`.
+
+### JOIN
+
+When `opts.defaultDbKey` is set, a `JOIN ... ON` query resolves to
+`relation-find`, with `[path, search, relations, findOpts, dbFindOpts]` in
+`relation`. Without `defaultDbKey` the JOIN is ignored and a plain `find` is
+returned.
+
+```typescript
+sqlParser.parse(
+	"SELECT posts.*, users.name FROM posts JOIN users ON posts.userId = users.id WHERE posts.id = 1",
+	{ defaultDbKey: "db" },
+);
+```
+
+`tableDbMap` points joined tables at different databases:
+
+```typescript
+sqlParser.parse(query, {
+	defaultDbKey: "defaultDb",
+	tableDbMap: { comments: "blogDb" },
+});
+```
+
+## INSERT, UPDATE, DELETE
+
+```sql
+INSERT INTO users (name, email) VALUES ('John', 'john@example.com')
+INSERT INTO users (name, age) VALUES ('A', 1), ('B', 2)   -- bulkAdd
+UPDATE users SET name = 'John' WHERE id = 1
+DELETE FROM users WHERE id = 1
+```
+
+Multiple rows map to `bulkAdd`. `ON DUPLICATE KEY UPDATE ...` maps to
+`updateOneOrAdd` and `ON DUPLICATE KEY DELETE` to `toggleOne`; both need exactly
+one row. `UPDATE` requires `WHERE`, and `DELETE` without `WHERE` clears the
+collection. Values may be single or double quoted, and numeric literals become
+numbers.
+
+## Collections and indexes
+
+```sql
+CREATE TABLE IF NOT EXISTS users
+DROP TABLE IF EXISTS users
+EXISTS TABLE users
+CREATE UNIQUE INDEX IF NOT EXISTS uq ON users (email, age)
+DROP INDEX uq ON users (email, age)
+```
+
+Index names may be wrapped in backticks; fields may use `/` for paths.
+
+## Options
+
+```typescript
+interface Opts {
+	defaultDbKey: string;
+	tableDbMap?: Record<string, string>;
+}
+```
+
+`defaultDbKey` is required to build relations for JOIN queries. `tableDbMap` maps
+a table to the database key it lives in, falling back to `defaultDbKey`.
+
+## Errors
+
+Invalid input throws an `Error` with a descriptive message. Unknown commands
+suggest the closest match, for example
+`Unknown SQL command 'SELECTT'. Did you mean 'SELECT'?`.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
