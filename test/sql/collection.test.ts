@@ -185,4 +185,33 @@ describe("SQL Parser - Collections", () => {
 			"Unknown SQL command 'SELECTT'. Did you mean 'SELECT'?",
 		);
 	});
+
+	test("18. should parse collection statements with quoted names", () => {
+		expect(
+			sqlParser.parse("CREATE TABLE IF NOT EXISTS `users`").query.collection,
+		).toBe("users");
+		expect(sqlParser.parse("DROP TABLE `users`").query.collection).toBe(
+			"users",
+		);
+		expect(sqlParser.parse("EXISTS TABLE `users`").query.collection).toBe(
+			"users",
+		);
+	});
+
+	test("19. should parse CREATE INDEX with quoted collection", () => {
+		const parsedQuery = sqlParser.parse(
+			"CREATE INDEX `idx_name` ON `users` (`email`)",
+		);
+
+		expect(parsedQuery.query.index).toEqual({
+			collection: "users",
+			fields: [
+				"email",
+			],
+			opts: {
+				unique: false,
+				name: "idx_name",
+			},
+		});
+	});
 });

@@ -625,4 +625,90 @@ describe("SQL Parser - SELECT", () => {
 			limit: 1,
 		});
 	});
+
+	test("46. should strip backticks from quoted identifiers", () => {
+		const parsedQuery = sqlParser.parse("SELECT `name` FROM `users`;");
+
+		expect(parsedQuery.method).toBe("find");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.findOpts).toEqual({
+			select: [
+				"name",
+			],
+		});
+	});
+
+	test("47. should strip quotes from WHERE, ORDER BY and GROUP BY fields", () => {
+		const query =
+			"SELECT `city` FROM `users` WHERE `status` = 'active' ORDER BY `name` DESC";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.query.search).toEqual({
+			status: "active",
+		});
+		expect(parsedQuery.query.dbFindOpts).toEqual({
+			sortBy: "name",
+			sortAsc: false,
+		});
+	});
+
+	test("48. should drop table qualifier and AS alias from select list", () => {
+		const parsedQuery = sqlParser.parse(
+			"SELECT `users`.`name` AS n, email FROM users",
+		);
+
+		expect(parsedQuery.query.findOpts).toEqual({
+			select: [
+				"name",
+				"email",
+			],
+		});
+	});
+
+	test("49. should keep quoted keys with dots and spaces", () => {
+		const parsedQuery = sqlParser.parse(
+			"SELECT name FROM users WHERE `a.b` = 1 AND `first name` = 'John'",
+		);
+
+		expect(parsedQuery.query.search).toEqual({
+			"a.b": 1,
+			"first name": "John",
+		});
+	});
+
+	test("50. should parse quoted aggregate fields and aliases", () => {
+		const parsedQuery = sqlParser.parse(
+			"SELECT MIN(`age`) AS `minAge` FROM `users` GROUP BY `city`",
+		);
+
+		expect(parsedQuery.query.dbFindOpts).toEqual({
+			min: {
+				minAge: "age",
+			},
+			groupBy: "city",
+		});
+	});
+
+	test("51. should parse quoted identifiers in JOIN", () => {
+		const parsedQuery = sqlParser.parse(
+			"SELECT posts.*, users.name FROM posts JOIN `users` ON `posts`.`userId` = `users`.`id`",
+			{
+				defaultDbKey: "db",
+			},
+		);
+
+		expect(parsedQuery.method).toBe("relation-find");
+		expect(parsedQuery.relation?.[2]).toEqual({
+			users: {
+				type: "1n",
+				path: [
+					"db",
+					"users",
+				],
+				pk: "userId",
+				fk: "id",
+				as: "users",
+			},
+		});
+	});
 });

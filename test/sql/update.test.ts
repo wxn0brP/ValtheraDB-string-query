@@ -103,4 +103,18 @@ describe("SQL Parser - UPDATE", () => {
 			sqlParser.parse(query);
 		}).toThrow("Invalid UPDATE syntax");
 	});
+
+	test("8. should parse quoted identifiers", () => {
+		const query = "UPDATE `users` SET `name` = 'John' WHERE `id` = 1";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("update");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			id: 1,
+		});
+		expect(parsedQuery.query.updater).toEqual({
+			name: "John",
+		});
+	});
 });

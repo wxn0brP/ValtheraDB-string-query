@@ -1,6 +1,8 @@
 // It’s cheap - it’s cheap
 // It’s good - it’s cheap
 
+import { lastPathPart } from "#sql/utils";
+
 type QueryObject = Record<string, any>;
 
 const operators: Record<string, string> = {
@@ -55,10 +57,16 @@ export function parseWhere(where: string): QueryObject {
 	if (trimmed === "" || trimmed === "1") return {};
 
 	// Tokenize the input string, handling parentheses and quoted values
+	const quotedPath = '(?:"[^"]*"|`[^`]*`)(?:\\.(?:"[^"]*"|`[^`]*`|[\\w]+))*';
 	const tokens =
 		where
-			.replace(/\s+(?=(?:[^'"]*['"][^'"]*['"])*[^'"]*$)/g, " ")
-			.match(/(?:\(|\)|'[^']*'|"[^"]*"|>=|<=|!=|<>|=|<|>|[^\s()=<>!]+)/g) || [];
+			.replace(/\s+(?=(?:[^'"`]*['"`][^'"`]*['"`])*[^'"`]*$)/g, " ")
+			.match(
+				new RegExp(
+					`(?:\\(|\\)|'(?:[^'\\\\]|\\\\.)*'|${quotedPath}|>=|<=|!=|<>|=|<|>|[^\\s()=<>!]+)`,
+					"g",
+				),
+			) || [];
 
 	const frames: Array<{
 		current: QueryObject;
@@ -136,10 +144,7 @@ export function parseWhere(where: string): QueryObject {
 				}
 			}
 
-			let key = token;
-			if (key.includes(".")) {
-				key = key.split(".").pop()!;
-			}
+			const key = lastPathPart(token);
 			let opToken = tokens[++i]?.trim();
 			// Handle multi-word operators
 			if (opToken) {

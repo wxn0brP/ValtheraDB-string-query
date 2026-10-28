@@ -1,4 +1,11 @@
-import { parseReturn } from "#sql/utils";
+import {
+	COLLECTION_SRC,
+	FIELD_SRC,
+	normalizeFieldPath,
+	parseReturn,
+	splitOutsideQuotes,
+	stripIdentQuotes,
+} from "#sql/utils";
 import { parseWhere } from "#sql/where";
 import { Opts, ValtheraQuery } from "#types.js";
 import { JoinToRelationsEngine } from "#sql/utils/join.util";
@@ -16,12 +23,15 @@ export function handleSelect(query: string, opts?: Opts): ValtheraQuery {
 		parseSelectClauses(query);
 
 	const match = mainQueryPart.match(
-		/SELECT\s+(.+?)\s+FROM\s+([\w/]+)((?:\s+JOIN\s+.+)*)?/i,
+		new RegExp(
+			`SELECT\\s+(.+?)\\s+FROM\\s+(${COLLECTION_SRC})((?:\\s+JOIN\\s+.+)*)?`,
+			"i",
+		),
 	);
 	if (!match) throw new Error(formatSelectSyntaxError(mainQueryPart));
 
 	const columnsPart = match[1].trim();
-	const collection = match[2];
+	const collection = stripIdentQuotes(match[2]);
 	const joinPart = match[3] || "";
 	const whereClause = whereClauseStr ? parseWhere(whereClauseStr) : {};
 
@@ -37,7 +47,7 @@ export function handleSelect(query: string, opts?: Opts): ValtheraQuery {
 	}
 	assertNoCountStar(columnsPart);
 
-	const findOpts = parseSelectClause(columnsPart);
+	const findOpts = parseSelectClause(columnsPart, collection);
 	Object.assign(dbFindOpts, parseAggregateSelectClause(columnsPart));
 	if (groupClauseStr !== undefined) {
 		dbFindOpts.groupBy = parseGroupClause(groupClauseStr);
@@ -301,14 +311,16 @@ function parseOrderClause(orderClause: string): DbFindOpts {
 		};
 	}
 
-	const match = orderClause.match(/^([\w./]+)(?:\s+(ASC|DESC))?$/i);
+	const match = orderClause.match(
+		new RegExp(`^(${FIELD_SRC})(?:\\s+(ASC|DESC))?$`, "i"),
+	);
 	if (!match)
 		throw new Error(
 			`Invalid ORDER BY syntax near '${orderClause || "ORDER BY"}'`,
 		);
 
 	return {
-		sortBy: match[1],
+		sortBy: normalizeFieldPath(match[1]),
 		sortAsc: match[2]?.toUpperCase() !== "DESC",
 	};
 }
@@ -327,7 +339,10 @@ function parseAggregateSelectClause(selectClause: string): DbFindOpts {
 	for (const part of splitSelectParts(selectClause)) {
 		const aggregateStart = part.match(/^(MIN|MAX|AVG|COUNT)\b/i);
 		const match = part.match(
-			/^(MIN|MAX|AVG|COUNT)\(\s*([\w./]+)\s*\)(?:\s+AS\s+([\w.]+))?$/i,
+			new RegExp(
+				`^(MIN|MAX|AVG|COUNT)\\(\\s*(${FIELD_SRC})\\s*\\)(?:\\s+AS\\s+(${FIELD_SRC}))?$`,
+				"i",
+			),
 		);
 		if (aggregateStart && !match) {
 			throw new Error(`Invalid aggregate expression '${part}'`);
@@ -335,8 +350,10 @@ function parseAggregateSelectClause(selectClause: string): DbFindOpts {
 		if (!match) continue;
 
 		const aggregate = match[1].toLowerCase() as "min" | "max" | "avg" | "count";
-		const field = match[2];
-		const alias = match[3] || `${aggregate}_${field.replace(/[./]/g, "_")}`;
+		const field = normalizeFieldPath(match[2]);
+		const alias = match[3]
+			? stripIdentQuotes(match[3])
+			: `${aggregate}_${field.replace(/[./]/g, "_")}`;
 		dbFindOpts[aggregate] ||= {};
 		dbFindOpts[aggregate]![alias] = field;
 	}
@@ -381,7 +398,9 @@ function assertNoCountStar(selectClause: string) {
 }
 
 function parseGroupClause(groupClause: string) {
-	const groupBy = groupClause.split(/\s*,\s*/).filter(Boolean);
+	const groupBy = splitOutsideQuotes(groupClause, ",")
+		.filter(Boolean)
+		.map(field => normalizeFieldPath(field));
 	if (!groupBy.length)
 		throw new Error("Invalid GROUP BY syntax near 'GROUP BY'");
 	const invalidKey = groupBy.find(key => !/^[\w./]+$/.test(key));
@@ -399,7 +418,7 @@ function formatSelectSyntaxError(query: string) {
 	const collection = query.match(/\bFROM\s*([^\s]*)/i)?.[1]?.trim();
 	if (!collection)
 		return "Invalid SELECT syntax: missing collection after FROM";
-	if (!/^[\w/]+$/.test(collection))
+	if (!new RegExp(`^(${COLLECTION_SRC})$`, "i").test(collection))
 		return `Invalid SELECT collection '${collection}'`;
 
 	return `Invalid SELECT syntax near '${query}'`;
@@ -407,19 +426,24 @@ function formatSelectSyntaxError(query: string) {
 
 export function parseJoinClauses(joinPart: string): Record<string, string> {
 	const joinClauses: Record<string, string> = {};
-	const joinRegex =
-		/\s+JOIN\s+([\w/]+)(?:\s+AS\s+)?([\w/]+)?\s+ON\s+([^\s]+)\s*=\s*([^\s]+)/gi;
+	const joinRegex = new RegExp(
+		`\\s+JOIN\\s+(${COLLECTION_SRC})(?:\\s+AS\\s+)?(${COLLECTION_SRC})?\\s+ON\\s+([^\\s]+)\\s*=\\s*([^\\s]+)`,
+		"gi",
+	);
 	let match: RegExpExecArray | null;
 	while ((match = joinRegex.exec(joinPart)) !== null) {
-		const table = match[1];
-		const alias = match[2] || table;
-		const condition = `${match[3]} = ${match[4]}`;
+		const table = stripIdentQuotes(match[1]);
+		const alias = match[2] ? stripIdentQuotes(match[2]) : table;
+		const condition = `${normalizeFieldPath(match[3])} = ${normalizeFieldPath(match[4])}`;
 		joinClauses[alias] = condition;
 	}
 	return joinClauses;
 }
 
-export function parseSelectClause(selectClause: string): {
+export function parseSelectClause(
+	selectClause: string,
+	collection?: string,
+): {
 	select?: string[];
 	exclude?: string[];
 } {
@@ -431,12 +455,16 @@ export function parseSelectClause(selectClause: string): {
 	const excludeMatch = selectClause.match(/\*\s+EXCLUDE\s+(.+)/i);
 	if (excludeMatch) {
 		return {
-			exclude: excludeMatch[1].split(/\s*,\s*/),
+			exclude: splitOutsideQuotes(excludeMatch[1], ",")
+				.filter(Boolean)
+				.map(field => normalizeFieldPath(field, collection)),
 		};
 	}
 
 	return {
-		select: splitSelectParts(selectClause),
+		select: splitSelectParts(selectClause).map(part =>
+			normalizeFieldPath(splitOutsideQuotes(part, " ")[0], collection),
+		),
 	};
 }
 
@@ -447,8 +475,5 @@ function hasAggregateSelect(selectClause: string) {
 }
 
 function splitSelectParts(selectClause: string) {
-	return selectClause
-		.split(/\s*,\s*/)
-		.map(part => part.trim())
-		.filter(Boolean);
+	return splitOutsideQuotes(selectClause, ",").filter(Boolean);
 }

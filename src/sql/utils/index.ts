@@ -1,6 +1,10 @@
 import { VQuery } from "@wxn0brp/db-core/types/query";
 import { ValtheraQuery } from "../../types";
 
+export const COLLECTION_SRC = '`[^`]+`|"[^"]+"|[\\w/]+';
+const FIELD_PART_SRC = '`[^`]+`|"[^"]+"|[\\w/]+';
+export const FIELD_SRC = `(?:${FIELD_PART_SRC})(?:\\.(?:${FIELD_PART_SRC}))*`;
+
 export function parseReturn(
 	method: string,
 	collection: string = "",
@@ -31,6 +35,62 @@ export function parseSet(setString: string) {
 
 export function removeQuotes(str: string) {
 	return str.replace(/^['"`]|['"`]$/g, "");
+}
+
+/** Strip surrounding identifier quotes (backticks or double quotes). */
+export function stripIdentQuotes(str: string) {
+	const trimmed = str.trim();
+	if (
+		(trimmed.startsWith("`") && trimmed.endsWith("`")) ||
+		(trimmed.startsWith('"') && trimmed.endsWith('"'))
+	)
+		return trimmed.slice(1, -1);
+	return trimmed;
+}
+
+/** Split on a single-char separator, ignoring separators inside quotes. */
+export function splitOutsideQuotes(input: string, separator: string) {
+	const parts: string[] = [];
+	let current = "";
+	let quote: string | undefined;
+
+	for (let i = 0; i < input.length; i++) {
+		const char = input[i];
+		if (quote) {
+			current += char;
+			if (char === quote && input[i - 1] !== "\\") quote = undefined;
+		} else if (char === "`" || char === '"' || char === "'") {
+			quote = char;
+			current += char;
+		} else if (char === separator) {
+			parts.push(current.trim());
+			current = "";
+		} else {
+			current += char;
+		}
+	}
+
+	parts.push(current.trim());
+	return parts;
+}
+
+/** Last field in a path: `users`.`id` -> id */
+export function lastPathPart(value: string) {
+	const parts = splitOutsideQuotes(value.trim(), ".");
+	return stripIdentQuotes(parts[parts.length - 1]);
+}
+
+/** Field path without the document/collection qualifier: `users`.`id` -> id */
+export function normalizeFieldPath(value: string, collection?: string) {
+	const parts = splitOutsideQuotes(value.trim(), ".").map(stripIdentQuotes);
+	if (
+		collection &&
+		parts.length > 1 &&
+		parts[0] === collection &&
+		parts[1] !== "*"
+	)
+		parts.shift();
+	return parts.join(".");
 }
 
 export function parseNum(str: string) {

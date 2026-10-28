@@ -103,4 +103,15 @@ describe("SQL Parser - DELETE", () => {
 			},
 		}); // where clause with multiple operators
 	});
+
+	test("9. should parse quoted identifiers", () => {
+		const query = "DELETE FROM `users` WHERE `id` = 1";
+		const parsedQuery = sqlParser.parse(query);
+
+		expect(parsedQuery.method).toBe("remove");
+		expect(parsedQuery.query.collection).toBe("users");
+		expect(parsedQuery.query.search).toEqual({
+			id: 1,
+		});
+	});
 });
